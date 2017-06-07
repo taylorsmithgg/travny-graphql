@@ -123,7 +123,7 @@ public class TestGraphQLGeneratorImpl {
     }
 
     @Test
-    public void shouldProduceValidExtendedSchema() {
+    public void shouldProduceValidNestedClass() {
         final String FIRST_CLASS = "first";
         final String FIELD = "field";
         final String SUBCLASS_FIELD = "subclass";
