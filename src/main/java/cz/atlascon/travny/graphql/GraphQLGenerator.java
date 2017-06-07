@@ -1,5 +1,6 @@
 package cz.atlascon.travny.graphql;
 
+import com.sun.istack.internal.NotNull;
 import cz.atlascon.travny.records.Record;
 import cz.atlascon.travny.schemas.RecordSchema;
 import cz.atlascon.travny.shaded.com.google.common.collect.Lists;
@@ -12,15 +13,15 @@ import java.util.List;
  */
 public interface GraphQLGenerator {
 
-    default GraphQLSchema generateSchema(Record item){
+    default GraphQLSchema generateSchema(@NotNull Record item){
         return generateSchema(item.getSchema());
     }
 
-    GraphQLSchema generateSchema(RecordSchema schema);
+    GraphQLSchema generateSchema(@NotNull RecordSchema schema);
 
-    GraphQLSchema generateSchema(List<RecordSchema> recordSchemas);
+    GraphQLSchema generateSchema(@NotNull List<RecordSchema> recordSchemas);
 
-    default GraphQLSchema generateSchema(RecordSchema... recordSchemas){
+    default GraphQLSchema generateSchema(@NotNull RecordSchema... recordSchemas){
         return generateSchema(Lists.newArrayList(recordSchemas));
     }
 }

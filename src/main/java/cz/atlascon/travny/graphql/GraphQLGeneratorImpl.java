@@ -1,5 +1,6 @@
 package cz.atlascon.travny.graphql;
 
+import com.sun.istack.internal.NotNull;
 import cz.atlascon.travny.schemas.Field;
 import cz.atlascon.travny.schemas.RecordSchema;
 import cz.atlascon.travny.shaded.com.google.common.base.Preconditions;
@@ -23,14 +24,14 @@ public class GraphQLGeneratorImpl implements GraphQLGenerator {
     private final ITypeGenerator generator = DefaultBuildContext.reflectionContext;
 
     @Override
-    public GraphQLSchema generateSchema(RecordSchema schema) {
+    public GraphQLSchema generateSchema(@NotNull RecordSchema schema) {
         return GraphQLSchema.newSchema()
                 .query(createRootObject(Lists.newArrayList(createRootField(schema))))
                 .build();
     }
 
     @Override
-    public GraphQLSchema generateSchema(List<RecordSchema> recordSchemas) {
+    public GraphQLSchema generateSchema(@NotNull List<RecordSchema> recordSchemas) {
         return GraphQLSchema.newSchema()
                 .query(createRootObject(createTypes(recordSchemas)))
                 .build();
@@ -86,14 +87,13 @@ public class GraphQLGeneratorImpl implements GraphQLGenerator {
             GraphQLOutputType outputType;
             if (Type.RECORD == field.getSchema().getType()) {
                 GraphQLObjectType build = GraphQLObjectType.newObject()
-                        .fields(createFields(((RecordSchema)field.getSchema()).getFields()))
+                        .fields(createFields(((RecordSchema) field.getSchema()).getFields()))
                         .name(field.getName())
                         .build();
                 outputType = build;
             } else {
                 outputType = generator.getOutputType(field.getSchema().getType().getJavaClass());
             }
-
 
             GraphQLFieldDefinition build = GraphQLFieldDefinition.newFieldDefinition()
                     .type(outputType)

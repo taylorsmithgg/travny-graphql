@@ -4,6 +4,7 @@ import cz.atlascon.travny.schemas.ListSchema;
 import cz.atlascon.travny.schemas.RecordSchema;
 import cz.atlascon.travny.schemas.Schema;
 import cz.atlascon.travny.schemas.builders.RecordSchemaBuilder;
+import graphql.AssertException;
 import graphql.schema.*;
 import org.junit.Assert;
 import org.junit.Test;
@@ -44,13 +45,6 @@ public class TestGraphQLGeneratorImpl {
                 .build();
     }
 
-    private RecordSchema createSchema2() {
-        return RecordSchema.newBuilder("Schema2")
-                .addField(Schema.INT, INT_NUMBER_NAME)
-                .addField(new ListSchema(RecordSchema.INT), LIST_NAME)
-                .build();
-    }
-
     @Test
     public void shouldProduceValid() {
         RecordSchema recordSchema = createDummySchema();
@@ -86,13 +80,47 @@ public class TestGraphQLGeneratorImpl {
     }
 
     @Test
-    public void shouldFail() {
+    public void shouldFailOnWrongNaming() {
+        RecordSchema schema2 = RecordSchema.newBuilder("Schema2")
+                .addField(Schema.INT, "this.is.not.valid§§")
+                .addField(new ListSchema(RecordSchema.INT), LIST_NAME)
+                .build();
+        try{
+            generator.generateSchema(schema2);
+        } catch (AssertException e){
+            return;
+        }
+        Assert.fail();
+    }
 
+    @Test
+    public void shouldProduceValidSchemaWithIDarguments(){
+        final String ID_INT = "idInt";
+        final String ID_SCHEMA = "idSchema";
+        RecordSchema idSchema = RecordSchema.newBuilder(ID_SCHEMA)
+                .addField(Schema.INT, ID_INT)
+                .build();
+
+        RecordSchema schemaWithId = RecordSchema.newBuilder("schemaWithId")
+                .addField(Schema.INT, INT_NUMBER_NAME)
+                .addField(new ListSchema(RecordSchema.INT), LIST_NAME)
+                .setIdSchema(idSchema)
+                .build();
+
+        GraphQLSchema graphQLSchema = generator.generateSchema(schemaWithId);
+
+        GraphQLObjectType queryType = graphQLSchema.getQueryType();
+        Assert.assertEquals(2, queryType.getFieldDefinitions());
     }
 
     @Test
     public void shouldProduceValidListSchema() {
-        GraphQLSchema graphQLSchema = generator.generateSchema(createDummySchema(), createSchema2());
+        RecordSchema schema2 = RecordSchema.newBuilder("Schema2")
+                .addField(Schema.INT, INT_NUMBER_NAME)
+                .addField(new ListSchema(RecordSchema.INT), LIST_NAME)
+                .build();
+
+        GraphQLSchema graphQLSchema = generator.generateSchema(createDummySchema(), schema2);
         List<GraphQLFieldDefinition> fieldDefinitions = graphQLSchema.getQueryType().getFieldDefinitions();
         Assert.assertEquals(2, fieldDefinitions.size());
         testDummyRoot(fieldDefinitions.get(0));
@@ -107,7 +135,7 @@ public class TestGraphQLGeneratorImpl {
     }
 
     @Test
-    public void shouldProduceValidEmptyClassSchema() {
+    public void shouldFailOnEmptySchema() {
         RecordSchema dummy = RecordSchema.newBuilder("dummy").build();
         try {
             GraphQLSchema graphQLSchema = generator.generateSchema(dummy);
