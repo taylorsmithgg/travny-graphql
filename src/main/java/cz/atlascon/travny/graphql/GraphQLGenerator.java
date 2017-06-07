@@ -18,9 +18,9 @@ public interface GraphQLGenerator {
 
     GraphQLSchema generateSchema(RecordSchema schema);
 
-    GraphQLSchema generateMultiSchema(List<RecordSchema> recordSchemas);
+    GraphQLSchema generateSchema(List<RecordSchema> recordSchemas);
 
-    default GraphQLSchema generateMultiSchema(RecordSchema... recordSchemas){
-        return generateMultiSchema(Lists.newArrayList(recordSchemas));
+    default GraphQLSchema generateSchema(RecordSchema... recordSchemas){
+        return generateSchema(Lists.newArrayList(recordSchemas));
     }
 }

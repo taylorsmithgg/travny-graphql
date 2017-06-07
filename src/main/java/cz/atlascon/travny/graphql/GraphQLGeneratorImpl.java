@@ -2,12 +2,15 @@ package cz.atlascon.travny.graphql;
 
 import cz.atlascon.travny.schemas.Field;
 import cz.atlascon.travny.schemas.RecordSchema;
+import cz.atlascon.travny.shaded.com.google.common.base.Preconditions;
 import cz.atlascon.travny.shaded.com.google.common.base.Splitter;
 import cz.atlascon.travny.shaded.com.google.common.collect.Lists;
+import cz.atlascon.travny.types.Type;
 import graphql.java.generator.DefaultBuildContext;
 import graphql.java.generator.type.ITypeGenerator;
 import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLObjectType;
+import graphql.schema.GraphQLOutputType;
 import graphql.schema.GraphQLSchema;
 
 import java.util.List;
@@ -27,7 +30,7 @@ public class GraphQLGeneratorImpl implements GraphQLGenerator {
     }
 
     @Override
-    public GraphQLSchema generateMultiSchema(List<RecordSchema> recordSchemas) {
+    public GraphQLSchema generateSchema(List<RecordSchema> recordSchemas) {
         return GraphQLSchema.newSchema()
                 .query(createRootObject(createTypes(recordSchemas)))
                 .build();
@@ -76,10 +79,24 @@ public class GraphQLGeneratorImpl implements GraphQLGenerator {
 
     private List<GraphQLFieldDefinition> createFields(List<Field> fields) {
         List<GraphQLFieldDefinition> qlFields = Lists.newArrayList();
+        Preconditions.checkNotNull(fields);
+        Preconditions.checkArgument(!fields.isEmpty(), "There must exist some fields!");
 
         for (Field field : fields) {
+            GraphQLOutputType outputType;
+            if (Type.RECORD == field.getSchema().getType()) {
+                GraphQLObjectType build = GraphQLObjectType.newObject()
+                        .fields(createFields(((RecordSchema)field.getSchema()).getFields()))
+                        .name(field.getName())
+                        .build();
+                outputType = build;
+            } else {
+                outputType = generator.getOutputType(field.getSchema().getType().getJavaClass());
+            }
+
+
             GraphQLFieldDefinition build = GraphQLFieldDefinition.newFieldDefinition()
-                    .type(generator.getOutputType(field.getSchema().getType().getJavaClass()))
+                    .type(outputType)
                     //TODO implement default values .staticValue()
                     .name(field.getName())
                     .description("This is field for: " + field.getSchema().getType().getJavaClass().getName())
