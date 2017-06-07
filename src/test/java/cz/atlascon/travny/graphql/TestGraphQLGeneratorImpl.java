@@ -111,6 +111,7 @@ public class TestGraphQLGeneratorImpl {
 
         GraphQLObjectType queryType = graphQLSchema.getQueryType();
         Assert.assertEquals(2, queryType.getFieldDefinitions());
+        Assert.fail();
     }
 
     @Test
