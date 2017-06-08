@@ -25,6 +25,11 @@ public class TestGraphQLGeneratorImpl {
     private static final String LIST_NAME = "list";
     private static final String FLOAT_NAME = "floatNumber";
 
+    private static final String FIRST_CLASS = "first";
+    private static final String FIELD = "field";
+    private static final String SUBCLASS_FIELD = "subclass";
+    private static final String INT_FIELD = "intField";
+    private static final String BOOLEAN_FIELD = "booleanField";
 
     @Test
     public void shouldProduceSomething() {
@@ -152,12 +157,23 @@ public class TestGraphQLGeneratorImpl {
     }
 
     @Test
+    public void oneClassHasMultipleFieldWithSameSubclass(){
+        final String FIELD2 = "field2";
+        RecordSchema subclass = RecordSchemaBuilder.newBuilder(SUBCLASS_FIELD)
+                .addField(Schema.INT, INT_FIELD)
+                .addField(Schema.BOOLEAN, BOOLEAN_FIELD)
+                .build();
+        RecordSchema build = RecordSchemaBuilder.newBuilder(FIRST_CLASS)
+                .addField(subclass, FIELD)
+                .addField(subclass, FIELD2)
+                .build();
+
+        GraphQLSchema graphQLSchema = generator.generateSchema(build);
+        Assert.assertNotNull(graphQLSchema);
+    }
+
+    @Test
     public void shouldProduceValidNestedClass() {
-        final String FIRST_CLASS = "first";
-        final String FIELD = "field";
-        final String SUBCLASS_FIELD = "subclass";
-        final String INT_FIELD = "intField";
-        final String BOOLEAN_FIELD = "booleanField";
 
         RecordSchema subclass = RecordSchemaBuilder.newBuilder(SUBCLASS_FIELD)
                 .addField(Schema.INT, INT_FIELD)
