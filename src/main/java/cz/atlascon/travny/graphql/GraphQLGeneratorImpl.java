@@ -86,11 +86,10 @@ public class GraphQLGeneratorImpl implements GraphQLGenerator {
         for (Field field : fields) {
             GraphQLOutputType outputType;
             if (Type.RECORD == field.getSchema().getType()) {
-                GraphQLObjectType build = GraphQLObjectType.newObject()
+                outputType = GraphQLObjectType.newObject()
                         .fields(createFields(((RecordSchema) field.getSchema()).getFields()))
                         .name(field.getName())
                         .build();
-                outputType = build;
             } else {
                 outputType = generator.getOutputType(field.getSchema().getType().getJavaClass());
             }

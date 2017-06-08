@@ -99,6 +99,21 @@ public class TestGraphQLGeneratorImpl {
     }
 
     @Test
+    public void shouldFailOnWrongNaming2(){
+        RecordSchema schema2 = RecordSchema.newBuilder("Schema2")
+                .addField(Schema.INT, "field0")
+                .addField(Schema.STRING, "field0")
+                .addField(new ListSchema(RecordSchema.INT), LIST_NAME)
+                .build();
+        try{
+            generator.generateSchema(schema2);
+        } catch (AssertException e){
+            return;
+        }
+        Assert.fail();
+    }
+
+    @Test
     public void shouldProduceValidSchemaWithIDarguments(){
         final String ID_INT = "idInt";
         final String ID_SCHEMA = "idSchema";
@@ -115,7 +130,7 @@ public class TestGraphQLGeneratorImpl {
         GraphQLSchema graphQLSchema = generator.generateSchema(schemaWithId);
 
         GraphQLObjectType queryType = graphQLSchema.getQueryType();
-        Assert.assertEquals(2, queryType.getFieldDefinitions());
+        Assert.assertEquals(2, queryType.getFieldDefinitions().size());
         Assert.fail();
     }
 
@@ -144,7 +159,7 @@ public class TestGraphQLGeneratorImpl {
     public void shouldFailOnEmptySchema() {
         RecordSchema dummy = RecordSchema.newBuilder("dummy").build();
         try {
-            GraphQLSchema graphQLSchema = generator.generateSchema(dummy);
+            generator.generateSchema(dummy);
         } catch (IllegalArgumentException e) {
             return;
         }
