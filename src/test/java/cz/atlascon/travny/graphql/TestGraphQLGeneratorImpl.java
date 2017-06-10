@@ -11,6 +11,8 @@ import org.junit.Test;
 
 import java.util.List;
 
+import static graphql.Scalars.GraphQLInt;
+
 /**
  * Created by tomas on 6.6.17.
  */
@@ -62,7 +64,7 @@ public class TestGraphQLGeneratorImpl {
     }
 
     private void testDummyRoot(GraphQLFieldDefinition fieldDefinition) {
-        GraphQLObjectType queryType = (GraphQLObjectType) fieldDefinition.getType();
+        GraphQLObjectType queryType = (GraphQLObjectType) ((GraphQLList)fieldDefinition.getType()).getWrappedType();
         GraphQLFieldDefinition intDefinition = queryType.getFieldDefinition(INT_NUMBER_NAME);
         Assert.assertTrue(intDefinition.getType() instanceof GraphQLScalarType);
         Assert.assertEquals("Int", intDefinition.getType().getName());
@@ -117,11 +119,13 @@ public class TestGraphQLGeneratorImpl {
     public void shouldProduceValidSchemaWithIDarguments(){
         final String ID_INT = "idInt";
         final String ID_SCHEMA = "idSchema";
+        final String SCHEMA_W_ID = "schemaWithId";
         RecordSchema idSchema = RecordSchema.newBuilder(ID_SCHEMA)
                 .addField(Schema.INT, ID_INT)
                 .build();
 
-        RecordSchema schemaWithId = RecordSchema.newBuilder("schemaWithId")
+
+        RecordSchema schemaWithId = RecordSchema.newBuilder(SCHEMA_W_ID)
                 .addField(Schema.INT, INT_NUMBER_NAME)
                 .addField(new ListSchema(RecordSchema.INT), LIST_NAME)
                 .setIdSchema(idSchema)
@@ -130,8 +134,17 @@ public class TestGraphQLGeneratorImpl {
         GraphQLSchema graphQLSchema = generator.generateSchema(schemaWithId);
 
         GraphQLObjectType queryType = graphQLSchema.getQueryType();
-        Assert.assertEquals(2, queryType.getFieldDefinitions().size());
-        Assert.fail();
+        Assert.assertEquals(1, queryType.getFieldDefinitions().size());
+        GraphQLFieldDefinition rootField = queryType.getFieldDefinition(SCHEMA_W_ID.toLowerCase());
+
+        Assert.assertEquals(1, rootField.getArguments().size());
+        Assert.assertEquals(GraphQLInt, rootField.getArgument(ID_INT).getType());
+
+        GraphQLObjectType schema = (GraphQLObjectType) ((GraphQLList)rootField.getType()).getWrappedType();
+
+        Assert.assertEquals(2, schema.getFieldDefinitions().size());
+        Assert.assertEquals(GraphQLInt, schema.getFieldDefinition(INT_NUMBER_NAME).getType());
+        Assert.assertNotNull(schema.getFieldDefinition(LIST_NAME).getType());
     }
 
     @Test
@@ -146,7 +159,7 @@ public class TestGraphQLGeneratorImpl {
         Assert.assertEquals(2, fieldDefinitions.size());
         testDummyRoot(fieldDefinitions.get(0));
 
-        GraphQLObjectType withList = (GraphQLObjectType) fieldDefinitions.get(1).getType();
+        GraphQLObjectType withList = (GraphQLObjectType) ((GraphQLList)fieldDefinitions.get(1).getType()).getWrappedType();
 
         GraphQLOutputType type = withList.getFieldDefinition(INT_NUMBER_NAME).getType();
         Assert.assertTrue(type instanceof GraphQLScalarType);
@@ -202,7 +215,10 @@ public class TestGraphQLGeneratorImpl {
         GraphQLFieldDefinition subcl = fieldDefinitions.get(0);
         Assert.assertEquals(FIRST_CLASS, subcl.getName());
 
-        GraphQLObjectType subType = (GraphQLObjectType) ((GraphQLObjectType) subcl.getType()).getFieldDefinition(FIELD).getType();
+
+        GraphQLObjectType listType = (GraphQLObjectType) ((GraphQLList) subcl.getType()).getWrappedType();
+
+        GraphQLObjectType subType = (GraphQLObjectType) listType.getFieldDefinition(FIELD).getType();
         Assert.assertEquals(2, subType.getFieldDefinitions().size());
 
         GraphQLFieldDefinition intField = subType.getFieldDefinition(INT_FIELD);

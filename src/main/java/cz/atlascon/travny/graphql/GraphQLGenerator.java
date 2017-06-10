@@ -1,11 +1,12 @@
 package cz.atlascon.travny.graphql;
 
-import com.sun.istack.internal.NotNull;
 import cz.atlascon.travny.records.Record;
 import cz.atlascon.travny.schemas.RecordSchema;
 import cz.atlascon.travny.shaded.com.google.common.collect.Lists;
+import graphql.schema.DataFetcher;
 import graphql.schema.GraphQLSchema;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -13,15 +14,17 @@ import java.util.List;
  */
 public interface GraphQLGenerator {
 
-    default GraphQLSchema generateSchema(@NotNull Record item){
+    default GraphQLSchema generateSchema(Record item) {
         return generateSchema(item.getSchema());
     }
 
-    GraphQLSchema generateSchema(@NotNull RecordSchema schema);
+    GraphQLSchema generateSchema(RecordSchema schema);
 
-    GraphQLSchema generateSchema(@NotNull List<RecordSchema> recordSchemas);
+    GraphQLSchema generateSchema(List<RecordSchema> recordSchemas);
 
-    default GraphQLSchema generateSchema(@NotNull RecordSchema... recordSchemas){
+    default GraphQLSchema generateSchema(RecordSchema... recordSchemas) {
         return generateSchema(Lists.newArrayList(recordSchemas));
     }
+
+    GraphQLSchema generateSchemaWFetcher(List<RecordSchema> recordSchemas, DataFetcher<Collection<?>> dataFetcher);
 }

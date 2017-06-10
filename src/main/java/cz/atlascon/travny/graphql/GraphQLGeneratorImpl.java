@@ -1,19 +1,16 @@
 package cz.atlascon.travny.graphql;
 
-import com.sun.istack.internal.NotNull;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
+import com.google.common.collect.Lists;
 import cz.atlascon.travny.schemas.Field;
 import cz.atlascon.travny.schemas.RecordSchema;
-import cz.atlascon.travny.shaded.com.google.common.base.Preconditions;
-import cz.atlascon.travny.shaded.com.google.common.base.Splitter;
-import cz.atlascon.travny.shaded.com.google.common.collect.Lists;
 import cz.atlascon.travny.types.Type;
 import graphql.java.generator.DefaultBuildContext;
 import graphql.java.generator.type.ITypeGenerator;
-import graphql.schema.GraphQLFieldDefinition;
-import graphql.schema.GraphQLObjectType;
-import graphql.schema.GraphQLOutputType;
-import graphql.schema.GraphQLSchema;
+import graphql.schema.*;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -24,31 +21,39 @@ public class GraphQLGeneratorImpl implements GraphQLGenerator {
     private final ITypeGenerator generator = DefaultBuildContext.reflectionContext;
 
     @Override
-    public GraphQLSchema generateSchema(@NotNull RecordSchema schema) {
+    public GraphQLSchema generateSchema(RecordSchema schema) {
         return GraphQLSchema.newSchema()
-                .query(createRootObject(Lists.newArrayList(createRootField(schema))))
+                .query(createRootObject(Lists.newArrayList(createRootField(schema, null))))
                 .build();
     }
 
     @Override
-    public GraphQLSchema generateSchema(@NotNull List<RecordSchema> recordSchemas) {
+    public GraphQLSchema generateSchema(List<RecordSchema> recordSchemas) {
         return GraphQLSchema.newSchema()
-                .query(createRootObject(createTypes(recordSchemas)))
+                .query(createRootObject(createTypes(recordSchemas, null)))
                 .build();
     }
 
-    private List<GraphQLFieldDefinition> createTypes(List<RecordSchema> recordSchemas) {
+    @Override
+    public GraphQLSchema generateSchemaWFetcher(List<RecordSchema> recordSchemas, DataFetcher<Collection<?>> dataFetcher) {
+        return GraphQLSchema.newSchema()
+                .query(createRootObject(createTypes(recordSchemas, dataFetcher)))
+                .build();
+    }
+
+
+    private List<GraphQLFieldDefinition> createTypes(List<RecordSchema> recordSchemas, DataFetcher dataFetcher) {
         List<GraphQLFieldDefinition> fieldDefinitions = Lists.newArrayList();
 
         for (RecordSchema recordSchema : recordSchemas) {
-            fieldDefinitions.add(createRootField(recordSchema));
+            fieldDefinitions.add(createRootField(recordSchema, dataFetcher));
         }
 
         return fieldDefinitions;
     }
 
 
-    private GraphQLFieldDefinition createRootField(RecordSchema schema) {
+    private GraphQLFieldDefinition createRootField(RecordSchema schema, DataFetcher dataFetcher) {
         GraphQLObjectType rootType = GraphQLObjectType.newObject()
                 .fields(createFields(schema.getFields()))
                 .name(schema.getName().replaceAll("\\.", "_"))
@@ -58,10 +63,30 @@ public class GraphQLGeneratorImpl implements GraphQLGenerator {
         String fieldName = strings.get(strings.size() - 1).toLowerCase();
 
         return GraphQLFieldDefinition.newFieldDefinition()
-                .type(rootType)
+                .type(GraphQLList.list(rootType))
+                .argument(createArgumentsFromIdSchema(schema.getIdSchema()))
                 .name(fieldName)
+                .dataFetcher(dataFetcher)
                 .description("Generated graphQL schema for class: " + schema.getName())
                 .build();
+    }
+
+    private List<GraphQLArgument> createArgumentsFromIdSchema(RecordSchema idSchema) {
+        List<GraphQLArgument> arguments = Lists.newArrayList();
+        if (idSchema == null) {
+            return arguments;
+        }
+        for (Field field : idSchema.getFields()) {
+            GraphQLInputType inputType = generator.getInputType(field.getSchema().getType().getJavaClass());
+            GraphQLArgument build = GraphQLArgument.newArgument()
+                    .name(field.getName())
+                    .type(inputType)
+                    .description("This is input argument for field name: " + field.getName())
+                    .build();
+            arguments.add(build);
+        }
+
+        return arguments;
     }
 
     /**
