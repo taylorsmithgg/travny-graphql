@@ -1,5 +1,6 @@
-package cz.atlascon.travny.graphql;
-
+import atlascon.travny.graphql.GraphQLGenerator;
+import atlascon.travny.graphql.GraphQLGeneratorImpl;
+import cz.atlascon.travny.parser.Parser;
 import cz.atlascon.travny.schemas.ListSchema;
 import cz.atlascon.travny.schemas.RecordSchema;
 import cz.atlascon.travny.schemas.Schema;
@@ -9,7 +10,10 @@ import graphql.schema.*;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
+import java.util.Set;
 
 import static graphql.Scalars.GraphQLInt;
 
@@ -181,7 +185,19 @@ public class TestGraphQLGeneratorImpl {
 
     @Test
     public void shouldProduceValidMultiClassSchema() {
+        final String FIELD2 = "field2";
+        RecordSchema subclass = RecordSchemaBuilder.newBuilder(SUBCLASS_FIELD)
+                .addField(Schema.INT, INT_FIELD)
+                .addField(Schema.BOOLEAN, BOOLEAN_FIELD)
+                .build();
+        RecordSchema build = RecordSchemaBuilder.newBuilder(FIRST_CLASS)
+                .addField(subclass, FIELD)
+                .addField(subclass, FIELD2)
+                .addField(subclass, "field3")
+                .build();
 
+        GraphQLSchema graphQLSchema = generator.generateSchema(build);
+        Assert.assertNotNull(graphQLSchema);
     }
 
     @Test
@@ -202,7 +218,6 @@ public class TestGraphQLGeneratorImpl {
 
     @Test
     public void shouldProduceValidNestedClass() {
-
         RecordSchema subclass = RecordSchemaBuilder.newBuilder(SUBCLASS_FIELD)
                 .addField(Schema.INT, INT_FIELD)
                 .addField(Schema.BOOLEAN, BOOLEAN_FIELD)
@@ -228,6 +243,16 @@ public class TestGraphQLGeneratorImpl {
         GraphQLFieldDefinition booleanField = subType.getFieldDefinition(BOOLEAN_FIELD);
         Assert.assertNotNull(booleanField);
         Assert.assertTrue(booleanField.getType() instanceof GraphQLScalarType);
+    }
+
+    @Test
+    public void shouldProduceValidComplexNestedClass() throws IOException {
+        Parser parser = new Parser();
+        InputStream resourceAsStream = TestGraphQLGeneratorImpl.class.getResourceAsStream("predpisSchema.txt");
+        parser.parse(resourceAsStream);
+        Set<String> schemaNames = parser.getSchemaNames();
+
+        GraphQLSchema graphQLSchema = generator.generateSchema((RecordSchema) parser.getSchema("cz.atlascon.etic.LCRpredpis"));
     }
 
 }

@@ -1,4 +1,4 @@
-package cz.atlascon.travny.graphql;
+package atlascon.travny.graphql;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
@@ -21,37 +21,22 @@ public class GraphQLGeneratorImpl implements GraphQLGenerator {
     private final ITypeGenerator generator = DefaultBuildContext.reflectionContext;
 
     @Override
-    public GraphQLSchema generateSchema(RecordSchema schema) {
-        return GraphQLSchema.newSchema()
-                .query(createRootObject(Lists.newArrayList(createRootField(schema, null))))
-                .build();
-    }
-
-    @Override
-    public GraphQLSchema generateSchema(List<RecordSchema> recordSchemas) {
-        return GraphQLSchema.newSchema()
-                .query(createRootObject(createTypes(recordSchemas, null)))
-                .build();
-    }
-
-    @Override
     public GraphQLSchema generateSchemaWFetcher(List<RecordSchema> recordSchemas, DataFetcher<Collection<?>> dataFetcher) {
+        Preconditions.checkNotNull(recordSchemas, "Not Valid use recordSchemas cannot be null!");
+        Preconditions.checkArgument(!recordSchemas.isEmpty(), "Not valid Use, recordSchemas cannot be empty!");
         return GraphQLSchema.newSchema()
                 .query(createRootObject(createTypes(recordSchemas, dataFetcher)))
                 .build();
     }
 
-
     private List<GraphQLFieldDefinition> createTypes(List<RecordSchema> recordSchemas, DataFetcher dataFetcher) {
         List<GraphQLFieldDefinition> fieldDefinitions = Lists.newArrayList();
-
         for (RecordSchema recordSchema : recordSchemas) {
             fieldDefinitions.add(createRootField(recordSchema, dataFetcher));
         }
 
         return fieldDefinitions;
     }
-
 
     private GraphQLFieldDefinition createRootField(RecordSchema schema, DataFetcher dataFetcher) {
         GraphQLObjectType rootType = GraphQLObjectType.newObject()
