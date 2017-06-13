@@ -3,6 +3,7 @@ package atlascon.travny.graphql;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import cz.atlascon.travny.schemas.Field;
 import cz.atlascon.travny.schemas.RecordSchema;
 import cz.atlascon.travny.types.Type;
@@ -12,12 +13,14 @@ import graphql.schema.*;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by tomas on 6.6.17.
  */
 public class GraphQLGeneratorImpl implements GraphQLGenerator {
 
+    private final Map<String, GraphQLObjectType> cacheMap = Maps.newHashMap();
     private final ITypeGenerator generator = DefaultBuildContext.reflectionContext;
 
     @Override
@@ -91,18 +94,25 @@ public class GraphQLGeneratorImpl implements GraphQLGenerator {
     private List<GraphQLFieldDefinition> createFields(List<Field> fields) {
         List<GraphQLFieldDefinition> qlFields = Lists.newArrayList();
         Preconditions.checkNotNull(fields);
-        Preconditions.checkArgument(!fields.isEmpty(), "There must exist some fields!");
+        Preconditions.checkArgument(!fields.isEmpty(), "There must exist some fields! Empty class is not allowed!");
 
+        GraphQLOutputType outputType;
         for (Field field : fields) {
-            GraphQLOutputType outputType;
             if (Type.RECORD == field.getSchema().getType()) {
-                outputType = GraphQLObjectType.newObject()
-                        .fields(createFields(((RecordSchema) field.getSchema()).getFields()))
-                        .name(field.getName())
-                        .build();
+                String className = ((RecordSchema) field.getSchema()).getName();
+                if (cacheMap.containsKey(className)) {
+                    outputType = cacheMap.get(className);
+                } else {
+                    outputType = GraphQLObjectType.newObject()
+                            .fields(createFields(((RecordSchema) field.getSchema()).getFields()))
+                            .name(field.getName())
+                            .build();
+                    cacheMap.put(className, (GraphQLObjectType) outputType);
+                }
             } else {
                 outputType = generator.getOutputType(field.getSchema().getType().getJavaClass());
             }
+
 
             GraphQLFieldDefinition build = GraphQLFieldDefinition.newFieldDefinition()
                     .type(outputType)

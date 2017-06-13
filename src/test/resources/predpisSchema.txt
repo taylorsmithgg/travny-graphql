@@ -2,26 +2,11 @@
 record cz.atlascon.etic.Propertyvalue {
     converted.avro.Union0 value1;
     converted.avro.Union0 value2;
-    converted.avro.Union1 binary;
 }
 
 record converted.avro.Union0 {
-    @Alias("boolean")
-    boolean val0;
-    @Alias("int")
-    int val1;
-    @Alias("long")
-    long val2;
-    @Alias("string")
-    string val3;
-    @Alias("float")
-    float val4;
     @Alias("cz.atlascon.core.Date")
-    cz.atlascon.core.Date val5;
-    @Alias("cz.atlascon.core.DateTime")
-    cz.atlascon.core.DateTime val6;
-    @Alias("cz.atlascon.core.Time")
-    cz.atlascon.core.Time val7;
+    cz.atlascon.core.Date dateValue;
 }
 
 record cz.atlascon.etic.LCRpredpis {

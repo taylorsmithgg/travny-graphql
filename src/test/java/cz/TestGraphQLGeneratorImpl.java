@@ -252,7 +252,7 @@ public class TestGraphQLGeneratorImpl {
         parser.parse(resourceAsStream);
         Set<String> schemaNames = parser.getSchemaNames();
 
-        GraphQLSchema graphQLSchema = generator.generateSchema((RecordSchema) parser.getSchema("cz.atlascon.etic.LCRpredpis"));
+        GraphQLSchema graphQLSchema = generator.generateSchema((RecordSchema) parser.getSchema("cz.atlascon.etic.Propertyvalue"));
     }
 
 }
