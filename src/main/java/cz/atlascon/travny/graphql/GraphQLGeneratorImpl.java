@@ -1,4 +1,4 @@
-package atlascon.travny.graphql;
+package cz.atlascon.travny.graphql;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
@@ -42,6 +42,7 @@ public class GraphQLGeneratorImpl implements GraphQLGenerator {
     }
 
     private GraphQLFieldDefinition createRootField(RecordSchema schema, DataFetcher dataFetcher) {
+        Preconditions.checkNotNull(schema, "schema cannot be null!");
         GraphQLObjectType rootType = GraphQLObjectType.newObject()
                 .fields(createFields(schema.getFields()))
                 .name(schema.getName().replaceAll("\\.", "_"))
@@ -66,6 +67,15 @@ public class GraphQLGeneratorImpl implements GraphQLGenerator {
         }
         for (Field field : idSchema.getFields()) {
             GraphQLInputType inputType = generator.getInputType(field.getSchema().getType().getJavaClass());
+
+            if(inputType instanceof GraphQLScalarType == false){
+                inputType = GraphQLInputObjectType.newInputObject()
+                        .name(inputType.getName()+"_arg")
+                        .description(((GraphQLInputObjectType) inputType).getDescription())
+                        .fields(((GraphQLInputObjectType) inputType).getFields())
+                        .build();
+            }
+
             GraphQLArgument build = GraphQLArgument.newArgument()
                     .name(field.getName())
                     .type(inputType)

@@ -1,5 +1,5 @@
-import atlascon.travny.graphql.GraphQLGenerator;
-import atlascon.travny.graphql.GraphQLGeneratorImpl;
+import cz.atlascon.travny.graphql.GraphQLGenerator;
+import cz.atlascon.travny.graphql.GraphQLGeneratorImpl;
 import cz.atlascon.travny.parser.Parser;
 import cz.atlascon.travny.schemas.ListSchema;
 import cz.atlascon.travny.schemas.RecordSchema;
@@ -8,6 +8,7 @@ import cz.atlascon.travny.schemas.builders.RecordSchemaBuilder;
 import graphql.AssertException;
 import graphql.schema.*;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -117,6 +118,16 @@ public class TestGraphQLGeneratorImpl {
             return;
         }
         Assert.fail();
+    }
+
+    @Test
+    public void usingObjectAsFieldAndInput() throws IOException {
+        Parser parser = new Parser();
+        InputStream resourceAsStream = TestGraphQLGeneratorImpl.class.getResourceAsStream("failSchema2.txt");
+        parser.parse(resourceAsStream);
+        Set<String> schemaNames = parser.getSchemaNames();
+
+        GraphQLSchema graphQLSchema = generator.generateSchema((RecordSchema) parser.getSchema("cz.atlascon.app.LCRrez3"));
     }
 
     @Test

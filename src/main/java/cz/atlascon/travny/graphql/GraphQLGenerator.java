@@ -1,7 +1,5 @@
-package atlascon.travny.graphql;
+package cz.atlascon.travny.graphql;
 
-import com.sun.istack.internal.NotNull;
-import com.sun.istack.internal.Nullable;
 import cz.atlascon.travny.records.Record;
 import cz.atlascon.travny.schemas.RecordSchema;
 import cz.atlascon.travny.shaded.com.google.common.collect.Lists;
@@ -39,5 +37,5 @@ public interface GraphQLGenerator {
      * @param dataFetcher
      * @return
      */
-    GraphQLSchema generateSchemaWFetcher(@NotNull List<RecordSchema> recordSchemas, @Nullable DataFetcher<Collection<?>> dataFetcher);
+    GraphQLSchema generateSchemaWFetcher(List<RecordSchema> recordSchemas, DataFetcher<Collection<?>> dataFetcher);
 }
