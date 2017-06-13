@@ -1,0 +1,98 @@
+
+record cz.atlascon.etic.Propertyvalue {
+    converted.avro.Union0 value1;
+    converted.avro.Union0 value2;
+}
+
+record converted.avro.Union0 {
+    @Alias("cz.atlascon.core.Date")
+    cz.atlascon.core.Date dateValue;
+}
+
+record cz.atlascon.etic.LCRpredpis {
+    @Id
+    long objectId;
+    cz.atlascon.etic.Propertyvalue kompletniDoplnkovyText;
+}
+
+record cz.atlascon.core.Date {
+    int day;
+    int month;
+    int year;
+}
+
+    record cz.atlascon.core.DateTime {
+int year;
+int month;
+int day;
+int hour;
+int minute;
+float sec;
+
+}
+
+    record cz.atlascon.core.Time {
+int hour;
+int minute;
+int second;
+int millisecond;
+
+}
+
+record converted.avro.Union1 {
+@Alias("bytes")
+bytes val0;
+@Alias("string")
+string val1;
+
+}
+
+
+   enum cz.atlascon.core.DZ {
+UNKNOWN, CR, SB, JD, EU, ES, LT, AP, JS, VS, SK, LIBERIS, CABERIS
+}
+
+  enum cz.atlascon.etic.Vyloucenozuzaverek {
+ZARADIT_DO_UZAVERKY, ZARADIT_DO_VYBEROVE_UZAVERKY, VYRAZENO_DOCASNE, VYRAZENO_TRVALE, V_UZAVERCE, UNKNOWN
+}
+
+
+    record cz.atlascon.etic.Vazba {
+list<long> targetId;
+int relationId;
+map<string, list<converted.avro.Union0>> properties;
+string targetSchema;
+
+}
+
+
+    record cz.atlascon.etic.Reglist {
+@Id
+int listId;
+cz.atlascon.etic.ReglistType type;
+id<cz.atlascon.etic.Reglist> parentId;
+int level;
+string nameShort;
+string name;
+string nameLong;
+cz.atlascon.etic.ReglistSubType subType;
+cz.atlascon.core.DateTime inserted;
+cz.atlascon.core.DateTime updated;
+
+}
+
+    enum cz.atlascon.etic.ReglistType {
+TEMATICKE_OKRUHY, EUROVOC, REJSTRIK_HESEL, TEMATICKE_OKRUHY_CAK, TEMATICKE_OKRUHY_JUS, UNKNOWN
+}
+
+enum cz.atlascon.etic.ReglistSubType {
+OBLAST, MIKROTEZAURUS, TERMIN, OKRUH, TEMA, UNKNOWN
+}
+
+
+    enum cz.atlascon.etic.Predpistype {
+SBIRKA_HLAVNIHO_MESTA, VESTNIKY_ZPRAVODAJE, DUVODOVE_ZPRAVY, USNESENI_VLADY, STATUTARNI_MESTA, VESTNIKY_KRAJU, SEZNAMY, VSEOBECNE, PREDPISY_MEST_A_OBCI, SBIRKY, UNKNOWN
+}
+
+
+

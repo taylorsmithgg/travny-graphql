@@ -1,0 +1,46 @@
+
+record cz.atlascon.etic.Propertyvalue {
+    converted.avro.Union0 value1;
+    converted.avro.Union0 value2;
+}
+
+record converted.avro.Union0 {
+    @Alias("cz.atlascon.core.Date")
+    cz.atlascon.core.Date dateValue;
+}
+
+record cz.atlascon.app.LCRpredpis {
+    @Id
+    long objectId;
+    cz.atlascon.etic.Propertyvalue kompletniDoplnkovyText;
+}
+
+record cz.atlascon.app.LCRpredpis2 {
+    @Id
+    long objectId;
+    cz.atlascon.etic.Propertyvalue kompletniDoplnkovyText;
+}
+
+record cz.atlascon.core.Date {
+    int day;
+    int month;
+    int year;
+}
+
+record cz.atlascon.app.LCRrez3 {
+@Id
+long objectId;
+id<cz.atlascon.app.LCRpredpis2> predpisId;
+string dzDocmanId;
+
+}
+record cz.atlascon.app.LCRrez2 {
+@Id
+long objectId;
+id<cz.atlascon.app.LCRpredpis> predpisId;
+string dzDocmanId;
+
+}
+
+
+
