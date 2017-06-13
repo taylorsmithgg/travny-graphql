@@ -6,9 +6,10 @@ import cz.atlascon.travny.schemas.RecordSchema;
 import cz.atlascon.travny.schemas.Schema;
 import cz.atlascon.travny.schemas.builders.RecordSchemaBuilder;
 import graphql.AssertException;
+import graphql.Scalars;
+import graphql.parser.GraphqlAntlrToLanguage;
 import graphql.schema.*;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -16,7 +17,9 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.Set;
 
+import static graphql.Scalars.GraphQLBoolean;
 import static graphql.Scalars.GraphQLInt;
+import static graphql.Scalars.GraphQLLong;
 
 /**
  * Created by tomas on 6.6.17.
@@ -69,7 +72,7 @@ public class TestGraphQLGeneratorImpl {
     }
 
     private void testDummyRoot(GraphQLFieldDefinition fieldDefinition) {
-        GraphQLObjectType queryType = (GraphQLObjectType) ((GraphQLList)fieldDefinition.getType()).getWrappedType();
+        GraphQLObjectType queryType = (GraphQLObjectType) ((GraphQLList) fieldDefinition.getType()).getWrappedType();
         GraphQLFieldDefinition intDefinition = queryType.getFieldDefinition(INT_NUMBER_NAME);
         Assert.assertTrue(intDefinition.getType() instanceof GraphQLScalarType);
         Assert.assertEquals("Int", intDefinition.getType().getName());
@@ -97,24 +100,24 @@ public class TestGraphQLGeneratorImpl {
                 .addField(Schema.INT, "this.is.not.valid§§")
                 .addField(new ListSchema(RecordSchema.INT), LIST_NAME)
                 .build();
-        try{
+        try {
             generator.generateSchema(schema2);
-        } catch (AssertException e){
+        } catch (AssertException e) {
             return;
         }
         Assert.fail();
     }
 
     @Test
-    public void shouldFailOnWrongNaming2(){
+    public void shouldFailOnWrongNaming2() {
         RecordSchema schema2 = RecordSchema.newBuilder("Schema2")
                 .addField(Schema.INT, "field0")
                 .addField(Schema.STRING, "field0")
                 .addField(new ListSchema(RecordSchema.INT), LIST_NAME)
                 .build();
-        try{
+        try {
             generator.generateSchema(schema2);
-        } catch (AssertException e){
+        } catch (AssertException e) {
             return;
         }
         Assert.fail();
@@ -127,18 +130,18 @@ public class TestGraphQLGeneratorImpl {
         parser.parse(resourceAsStream);
         Set<String> schemaNames = parser.getSchemaNames();
 
-        GraphQLSchema graphQLSchema = generator.generateSchema((RecordSchema) parser.getSchema("cz.atlascon.app.LCRrez3"));
+        GraphQLSchema graphQLSchema = generator.generateSchema((RecordSchema) parser.getSchema("cz.atlascon.app.LCRrez3"),
+                (RecordSchema) parser.getSchema("cz.atlascon.app.LCRrez2"));
     }
 
     @Test
-    public void shouldProduceValidSchemaWithIDarguments(){
+    public void shouldProduceValidSchemaWithIDarguments() {
         final String ID_INT = "idInt";
         final String ID_SCHEMA = "idSchema";
         final String SCHEMA_W_ID = "schemaWithId";
         RecordSchema idSchema = RecordSchema.newBuilder(ID_SCHEMA)
                 .addField(Schema.INT, ID_INT)
                 .build();
-
 
         RecordSchema schemaWithId = RecordSchema.newBuilder(SCHEMA_W_ID)
                 .addField(Schema.INT, INT_NUMBER_NAME)
@@ -155,11 +158,41 @@ public class TestGraphQLGeneratorImpl {
         Assert.assertEquals(1, rootField.getArguments().size());
         Assert.assertEquals(GraphQLInt, rootField.getArgument(ID_INT).getType());
 
-        GraphQLObjectType schema = (GraphQLObjectType) ((GraphQLList)rootField.getType()).getWrappedType();
+        GraphQLObjectType schema = (GraphQLObjectType) ((GraphQLList) rootField.getType()).getWrappedType();
 
         Assert.assertEquals(2, schema.getFieldDefinitions().size());
         Assert.assertEquals(GraphQLInt, schema.getFieldDefinition(INT_NUMBER_NAME).getType());
         Assert.assertNotNull(schema.getFieldDefinition(LIST_NAME).getType());
+    }
+
+    @Test
+    public void shouldProduceValidComplexListSchema() {
+        final String NC = "NestedClass";
+        RecordSchema nestedClass = RecordSchema.newBuilder(NC)
+                .addField(RecordSchema.LONG, "field2")
+                .addField(RecordSchema.BOOLEAN, "field3")
+                .build();
+
+        RecordSchema schema2 = RecordSchema.newBuilder("Schema2")
+                .addField(Schema.INT, INT_NUMBER_NAME)
+                .addField(new ListSchema(nestedClass), LIST_NAME)
+                .build();
+
+        GraphQLSchema graphQLSchema = generator.generateSchema(createDummySchema(), schema2);
+        List<GraphQLFieldDefinition> fieldDefinitions = graphQLSchema.getQueryType().getFieldDefinitions();
+        Assert.assertEquals(2, fieldDefinitions.size());
+        testDummyRoot(fieldDefinitions.get(0));
+
+        GraphQLObjectType withList = (GraphQLObjectType) ((GraphQLList) fieldDefinitions.get(1).getType()).getWrappedType();
+
+        GraphQLOutputType type = withList.getFieldDefinition(INT_NUMBER_NAME).getType();
+        Assert.assertTrue(type instanceof GraphQLScalarType);
+
+        GraphQLList list = (GraphQLList) withList.getFieldDefinition(LIST_NAME).getType();
+        Assert.assertEquals(NC, list.getWrappedType().getName());
+        GraphQLObjectType wrappedType = (GraphQLObjectType) list.getWrappedType();
+        Assert.assertEquals(GraphQLLong, wrappedType.getFieldDefinitions().get(0).getType());
+        Assert.assertEquals(GraphQLBoolean, wrappedType.getFieldDefinitions().get(1).getType());
     }
 
     @Test
@@ -174,13 +207,13 @@ public class TestGraphQLGeneratorImpl {
         Assert.assertEquals(2, fieldDefinitions.size());
         testDummyRoot(fieldDefinitions.get(0));
 
-        GraphQLObjectType withList = (GraphQLObjectType) ((GraphQLList)fieldDefinitions.get(1).getType()).getWrappedType();
+        GraphQLObjectType withList = (GraphQLObjectType) ((GraphQLList) fieldDefinitions.get(1).getType()).getWrappedType();
 
         GraphQLOutputType type = withList.getFieldDefinition(INT_NUMBER_NAME).getType();
         Assert.assertTrue(type instanceof GraphQLScalarType);
 
-        GraphQLObjectType list = (GraphQLObjectType) withList.getFieldDefinition(LIST_NAME).getType();
-        Assert.assertNotNull(list);
+        GraphQLList list = (GraphQLList) withList.getFieldDefinition(LIST_NAME).getType();
+        Assert.assertEquals(Scalars.GraphQLInt, list.getWrappedType());
     }
 
     @Test
@@ -212,7 +245,7 @@ public class TestGraphQLGeneratorImpl {
     }
 
     @Test
-    public void oneClassHasMultipleFieldWithSameSubclass(){
+    public void oneClassHasMultipleFieldWithSameSubclass() {
         final String FIELD2 = "field2";
         RecordSchema subclass = RecordSchemaBuilder.newBuilder(SUBCLASS_FIELD)
                 .addField(Schema.INT, INT_FIELD)

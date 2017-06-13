@@ -15,6 +15,12 @@ record cz.atlascon.app.LCRpredpis {
     cz.atlascon.etic.Propertyvalue kompletniDoplnkovyText;
 }
 
+record cz.atlascon.app.LCRpredpis2 {
+    @Id
+    long objectId;
+    cz.atlascon.etic.Propertyvalue kompletniDoplnkovyText;
+}
+
 record cz.atlascon.core.Date {
     int day;
     int month;
@@ -24,18 +30,8 @@ record cz.atlascon.core.Date {
 record cz.atlascon.app.LCRrez3 {
 @Id
 long objectId;
-id<cz.atlascon.app.LCRpredpis> predpisId;
+id<cz.atlascon.app.LCRpredpis2> predpisId;
 string dzDocmanId;
-cz.atlascon.core.Date datumPocatkuPlatnosti;
-boolean pouzitiRezu;
-int cRadkuZneni;
-string sbCisloNovelizujicihoPredpisu;
-boolean zkratkaNovelizPredpisu;
-boolean znNezapisovatDoTabulkyZneni;
-boolean znNepouzitZkratkuZdrojeHeader;
-boolean znNepouzitZkratkuZdrojeSubheader;
-boolean znNezapisovatDoSeznamuZneni;
-boolean znPouzitPoradoveCislo;
 
 }
 record cz.atlascon.app.LCRrez2 {
@@ -43,43 +39,8 @@ record cz.atlascon.app.LCRrez2 {
 long objectId;
 id<cz.atlascon.app.LCRpredpis> predpisId;
 string dzDocmanId;
-cz.atlascon.core.Date datumPocatkuPlatnosti;
-boolean pouzitiRezu;
-int cRadkuZneni;
-string sbCisloNovelizujicihoPredpisu;
-boolean zkratkaNovelizPredpisu;
-boolean znNezapisovatDoTabulkyZneni;
-boolean znNepouzitZkratkuZdrojeHeader;
-boolean znNepouzitZkratkuZdrojeSubheader;
-boolean znNezapisovatDoSeznamuZneni;
-boolean znPouzitPoradoveCislo;
 
 }
 
-    record cz.atlascon.core.DateTime {
-int year;
-int month;
-int day;
-int hour;
-int minute;
-float sec;
-
-}
-
-    record cz.atlascon.core.Time {
-int hour;
-int minute;
-int second;
-int millisecond;
-
-}
-
-record converted.avro.Union1 {
-@Alias("bytes")
-bytes val0;
-@Alias("string")
-string val1;
-
-}
 
 

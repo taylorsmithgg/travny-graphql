@@ -5,7 +5,9 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import cz.atlascon.travny.schemas.Field;
+import cz.atlascon.travny.schemas.ListSchema;
 import cz.atlascon.travny.schemas.RecordSchema;
+import cz.atlascon.travny.schemas.Schema;
 import cz.atlascon.travny.types.Type;
 import graphql.java.generator.DefaultBuildContext;
 import graphql.java.generator.type.ITypeGenerator;
@@ -13,14 +15,15 @@ import graphql.schema.*;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * Created by tomas on 6.6.17.
  */
 public class GraphQLGeneratorImpl implements GraphQLGenerator {
 
-    private final Map<String, GraphQLObjectType> cacheMap = Maps.newHashMap();
+    private final ConcurrentMap<String, GraphQLObjectType> objectMap = Maps.newConcurrentMap();
+    private final ConcurrentMap<String, GraphQLInputObjectType> inputMap = Maps.newConcurrentMap();
     private final ITypeGenerator generator = DefaultBuildContext.reflectionContext;
 
     @Override
@@ -43,11 +46,14 @@ public class GraphQLGeneratorImpl implements GraphQLGenerator {
 
     private GraphQLFieldDefinition createRootField(RecordSchema schema, DataFetcher dataFetcher) {
         Preconditions.checkNotNull(schema, "schema cannot be null!");
-        GraphQLObjectType rootType = GraphQLObjectType.newObject()
+        String rootName = convertToName(schema.getName());
+        objectMap.putIfAbsent(rootName, GraphQLObjectType.newObject()
                 .fields(createFields(schema.getFields()))
-                .name(schema.getName().replaceAll("\\.", "_"))
-                .build();
+                .name(rootName)
+                .build());
+        GraphQLObjectType rootType = objectMap.get(rootName);
 
+        // get name of class without packages
         List<String> strings = Splitter.on('.').splitToList(schema.getName());
         String fieldName = strings.get(strings.size() - 1).toLowerCase();
 
@@ -67,13 +73,15 @@ public class GraphQLGeneratorImpl implements GraphQLGenerator {
         }
         for (Field field : idSchema.getFields()) {
             GraphQLInputType inputType = generator.getInputType(field.getSchema().getType().getJavaClass());
-
-            if(inputType instanceof GraphQLScalarType == false){
-                inputType = GraphQLInputObjectType.newInputObject()
-                        .name(inputType.getName()+"_arg")
+            if (inputType instanceof GraphQLScalarType == false) {
+                String name = inputType.getName() + "_arg";
+                inputMap.putIfAbsent(name, GraphQLInputObjectType.newInputObject()
+                        .name(name)
                         .description(((GraphQLInputObjectType) inputType).getDescription())
                         .fields(((GraphQLInputObjectType) inputType).getFields())
-                        .build();
+                        .build());
+
+                inputType = inputMap.get(name);
             }
 
             GraphQLArgument build = GraphQLArgument.newArgument()
@@ -109,20 +117,31 @@ public class GraphQLGeneratorImpl implements GraphQLGenerator {
         GraphQLOutputType outputType;
         for (Field field : fields) {
             if (Type.RECORD == field.getSchema().getType()) {
-                String className = ((RecordSchema) field.getSchema()).getName();
-                if (cacheMap.containsKey(className)) {
-                    outputType = cacheMap.get(className);
+                String className = convertToName(((RecordSchema) field.getSchema()).getName());
+                objectMap.putIfAbsent(className, GraphQLObjectType.newObject()
+                        .fields(createFields(((RecordSchema) field.getSchema()).getFields()))
+                        .name(className)
+                        .build());
+                outputType = objectMap.get(className);
+            } else if(field.getSchema() instanceof ListSchema){
+                GraphQLType graphQLType;
+                Schema listSchema = ((ListSchema) field.getSchema()).getValueSchema();
+                if(Type.RECORD == listSchema.getType()){
+                    String className = convertToName(((RecordSchema) listSchema).getName());
+                    objectMap.putIfAbsent(className, GraphQLObjectType.newObject()
+                            .fields(createFields((((RecordSchema) listSchema).getFields())))
+                            .name(className)
+                            .build());
+                    graphQLType = objectMap.get(className);
                 } else {
-                    outputType = GraphQLObjectType.newObject()
-                            .fields(createFields(((RecordSchema) field.getSchema()).getFields()))
-                            .name(field.getName())
-                            .build();
-                    cacheMap.put(className, (GraphQLObjectType) outputType);
+                    Class javaClass = ((ListSchema) field.getSchema()).getValueSchema().getType().getJavaClass();
+                    graphQLType = generator.getOutputType(javaClass);
                 }
+
+                outputType = GraphQLList.list(graphQLType);
             } else {
                 outputType = generator.getOutputType(field.getSchema().getType().getJavaClass());
             }
-
 
             GraphQLFieldDefinition build = GraphQLFieldDefinition.newFieldDefinition()
                     .type(outputType)
@@ -134,5 +153,22 @@ public class GraphQLGeneratorImpl implements GraphQLGenerator {
         }
 
         return qlFields;
+    }
+
+    private GraphQLObjectType createListField(Schema schema) {
+        if(Type.RECORD == schema.getType()){
+
+            createListField(schema);
+        }
+
+        return null;
+    }
+
+    private String convertToName(String name) {
+        if (name.contains("id<")) {
+            String s = name.replaceAll("id<|>", "");
+            name = s + "_ID";
+        }
+        return name.replaceAll("\\.|<|>", "_");
     }
 }
