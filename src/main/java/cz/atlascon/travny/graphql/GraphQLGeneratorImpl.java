@@ -4,10 +4,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import cz.atlascon.travny.schemas.Field;
-import cz.atlascon.travny.schemas.ListSchema;
-import cz.atlascon.travny.schemas.RecordSchema;
-import cz.atlascon.travny.schemas.Schema;
+import cz.atlascon.travny.schemas.*;
 import cz.atlascon.travny.types.Type;
 import graphql.schema.*;
 
@@ -74,8 +71,8 @@ public class GraphQLGeneratorImpl implements GraphQLGenerator {
         }
         for (Field field : idSchema.getFields()) {
             GraphQLInputType inputType = convertor.getInputType(field.getSchema());
+            String name = inputType.getName() + "_arg";
             if (inputType instanceof GraphQLEnumType) {
-                String name = inputType.getName() + "_arg";
                 inputMap.putIfAbsent(name, GraphQLInputObjectType.newInputObject()
                         .name(name)
                         .description(((GraphQLEnumType) inputType).getDescription())
@@ -87,7 +84,6 @@ public class GraphQLGeneratorImpl implements GraphQLGenerator {
                         .build());
                 inputType = inputMap.get(name);
             } else if (inputType instanceof GraphQLScalarType == false) {
-                String name = inputType.getName() + "_arg";
                 inputMap.putIfAbsent(name, GraphQLInputObjectType.newInputObject()
                         .name(name)
                         .description(((GraphQLInputObjectType) inputType).getDescription())
@@ -130,7 +126,12 @@ public class GraphQLGeneratorImpl implements GraphQLGenerator {
 
         GraphQLOutputType outputType;
         for (Field field : fields) {
-            if (Type.RECORD == field.getSchema().getType()) {
+            if (Type.ENUM == field.getSchema().getType()) {
+                String className = convertToName(((EnumSchema) field.getSchema()).getName());
+                GraphQLOutputType qlOutputType = convertor.getOutputType(field.getSchema());
+                objectMap.putIfAbsent(className, (GraphQLObjectType) qlOutputType);
+                outputType = objectMap.get(className);
+            } else if (Type.RECORD == field.getSchema().getType()) {
                 String className = convertToName(((RecordSchema) field.getSchema()).getName());
                 objectMap.putIfAbsent(className, GraphQLObjectType.newObject()
                         .fields(createFields(((RecordSchema) field.getSchema()).getFields()))
@@ -147,12 +148,17 @@ public class GraphQLGeneratorImpl implements GraphQLGenerator {
                             .name(className)
                             .build());
                     graphQLType = objectMap.get(className);
+                } else if (Type.ENUM == ((ListSchema) field.getSchema()).getValueSchema().getType()) {
+                    String className = convertToName(((EnumSchema) listSchema).getName());
+                    objectMap.putIfAbsent(className, (GraphQLObjectType) convertor.getOutputType(((ListSchema) field.getSchema()).getValueSchema()));
+                    graphQLType = objectMap.get(className);
                 } else {
                     graphQLType = convertor.getOutputType(((ListSchema) field.getSchema()).getValueSchema());
                 }
                 outputType = GraphQLList.list(graphQLType);
             } else {
                 outputType = convertor.getOutputType(field.getSchema());
+                Preconditions.checkArgument(outputType instanceof GraphQLScalarType);
             }
 
             GraphQLFieldDefinition build = GraphQLFieldDefinition.newFieldDefinition()

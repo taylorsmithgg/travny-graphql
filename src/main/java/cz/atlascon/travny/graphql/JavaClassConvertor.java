@@ -1,15 +1,13 @@
 package cz.atlascon.travny.graphql;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 import cz.atlascon.travny.schemas.EnumSchema;
 import cz.atlascon.travny.schemas.Schema;
 import cz.atlascon.travny.types.EnumConstant;
 import cz.atlascon.travny.types.Type;
 import graphql.AssertException;
-import graphql.schema.GraphQLEnumType;
-import graphql.schema.GraphQLInputType;
-import graphql.schema.GraphQLOutputType;
-import graphql.schema.GraphQLScalarType;
+import graphql.schema.*;
 
 import java.util.Collection;
 
@@ -74,10 +72,13 @@ public class JavaClassConvertor<E extends Enum<E>> implements ClassConvertor {
 
     @Override
     public GraphQLInputType getInputType(Schema schema) {
+        if (schema.getType() == Type.ENUM) {
+            return GraphQLString;
+        }
         return (GraphQLInputType) createCommon(schema);
     }
 
-    private GraphQLEnumType createEnum(Schema schema) {
+    private GraphQLObjectType createEnum(Schema schema) {
         EnumSchema enumSchema = (EnumSchema) schema;
         Collection<EnumConstant> constants = enumSchema.getConstants();
         GraphQLEnumType.Builder name = GraphQLEnumType.newEnum().name(convertToName(((EnumSchema) schema).getName()));
@@ -85,6 +86,10 @@ public class JavaClassConvertor<E extends Enum<E>> implements ClassConvertor {
         for (EnumConstant constant : constants) {
             name.value(constant.getConstant());
         }
-        return name.build();
+        return GraphQLObjectType.newObject().name(convertToName(((EnumSchema) schema).getName()))
+                .field(GraphQLFieldDefinition.newFieldDefinition().name("constant").type(GraphQLString).build())
+                .field(GraphQLFieldDefinition.newFieldDefinition().name("ordinal").type(GraphQLInt).build())
+                .description("enum for: " + enumSchema.getName())
+                .build();
     }
 }
