@@ -1,10 +1,13 @@
+import com.google.common.collect.Lists;
 import cz.atlascon.travny.graphql.GraphQLGenerator;
 import cz.atlascon.travny.graphql.GraphQLGeneratorImpl;
 import cz.atlascon.travny.parser.Parser;
+import cz.atlascon.travny.schemas.EnumSchema;
 import cz.atlascon.travny.schemas.ListSchema;
 import cz.atlascon.travny.schemas.RecordSchema;
 import cz.atlascon.travny.schemas.Schema;
 import cz.atlascon.travny.schemas.builders.RecordSchemaBuilder;
+import cz.atlascon.travny.types.EnumConstantImpl;
 import graphql.AssertException;
 import graphql.Scalars;
 import graphql.parser.GraphqlAntlrToLanguage;
@@ -92,6 +95,15 @@ public class TestGraphQLGeneratorImpl {
         GraphQLFieldDefinition floatDefinition = queryType.getFieldDefinition(FLOAT_NAME);
         Assert.assertTrue(floatDefinition.getType() instanceof GraphQLScalarType);
         Assert.assertEquals("Float", floatDefinition.getType().getName());
+    }
+
+    @Test
+    public void convertingEnum(){
+        RecordSchema schema2 = RecordSchema.newBuilder("Schema2")
+                .addField(Schema.INT, "someInt")
+                .addField(new EnumSchema("someName", Lists.newArrayList(new EnumConstantImpl(0,"ano"),new EnumConstantImpl(0,"ne"))), "enum")
+                .build();
+        generator.generateSchema(schema2);
     }
 
     @Test
