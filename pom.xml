@@ -48,12 +48,6 @@
         </dependency>
 
         <dependency>
-            <groupId>com.graphql-java</groupId>
-            <artifactId>graphql-java-type-generator</artifactId>
-            <version>0.10.0</version>
-        </dependency>
-
-        <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-jdk14</artifactId>
             <version>1.7.25</version>
