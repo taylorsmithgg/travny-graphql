@@ -3,27 +3,29 @@ package cz.atlascon.travny.graphql;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import cz.atlascon.travny.graphql.convertor.ClassConvertor;
+import cz.atlascon.travny.graphql.convertor.ClassConvertorImpl;
 import cz.atlascon.travny.graphql.input.InputGenerator;
 import cz.atlascon.travny.graphql.output.OutputGenerator;
-import cz.atlascon.travny.schemas.*;
-import cz.atlascon.travny.types.Type;
+import cz.atlascon.travny.schemas.RecordSchema;
 import graphql.schema.*;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.concurrent.ConcurrentMap;
-
-import static cz.atlascon.travny.graphql.common.Common.convertToName;
-import static graphql.Scalars.GraphQLString;
 
 /**
  * Created by tomas on 6.6.17.
  */
 public class GraphQLGeneratorImpl implements GraphQLGenerator {
 
-    private final InputGenerator inputGenerator = new InputGenerator();
-    private final OutputGenerator outputGenerator = new OutputGenerator();
+    private final InputGenerator inputGenerator;
+    private final OutputGenerator outputGenerator;
+
+    public GraphQLGeneratorImpl() {
+        ClassConvertor classConvertor = new ClassConvertorImpl();
+        inputGenerator = new InputGenerator(classConvertor);
+        outputGenerator = new OutputGenerator(classConvertor);
+    }
 
     @Override
     public GraphQLSchema generateSchemaWFetcher(List<RecordSchema> recordSchemas, DataFetcher<Collection<?>> dataFetcher) {

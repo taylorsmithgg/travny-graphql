@@ -1,23 +1,28 @@
 package cz.atlascon.travny.graphql.convertor;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Maps;
 import cz.atlascon.travny.schemas.EnumSchema;
 import cz.atlascon.travny.schemas.Schema;
 import cz.atlascon.travny.types.EnumConstant;
 import cz.atlascon.travny.types.Type;
 import graphql.AssertException;
-import graphql.schema.*;
+import graphql.schema.GraphQLEnumType;
+import graphql.schema.GraphQLInputType;
+import graphql.schema.GraphQLOutputType;
+import graphql.schema.GraphQLScalarType;
 
 import java.util.Collection;
+import java.util.concurrent.ConcurrentMap;
 
 import static cz.atlascon.travny.graphql.common.Common.convertToName;
 import static graphql.Scalars.*;
-import static graphql.Scalars.GraphQLByte;
 
 /**
  * Created by tomas on 25.6.17.
  */
 public class ClassConvertorImpl implements ClassConvertor {
+    private final ConcurrentMap<String, GraphQLEnumType> enumMap = Maps.newConcurrentMap();
 
     @Override
     public GraphQLScalarType getByClass(Class aClass) {
@@ -71,12 +76,14 @@ public class ClassConvertorImpl implements ClassConvertor {
     private GraphQLEnumType createEnum(Schema schema) {
         EnumSchema enumSchema = (EnumSchema) schema;
         Collection<EnumConstant> constants = enumSchema.getConstants();
-        GraphQLEnumType.Builder name = GraphQLEnumType.newEnum().name(convertToName(((EnumSchema) schema).getName()));
+        String eName = convertToName(((EnumSchema) schema).getName());
+        GraphQLEnumType.Builder enumQL = GraphQLEnumType.newEnum().name(eName);
 
         for (EnumConstant constant : constants) {
-            name.value(constant.getConstant(), constant.getOrd());
+            enumQL.value(constant.getConstant(), constant.getOrd());
         }
+        enumMap.putIfAbsent(eName, enumQL.build());
 
-        return name.build();
+        return enumMap.get(eName);
     }
 }

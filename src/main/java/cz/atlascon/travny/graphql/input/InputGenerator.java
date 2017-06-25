@@ -1,6 +1,5 @@
 package cz.atlascon.travny.graphql.input;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import cz.atlascon.travny.graphql.convertor.ClassConvertor;
@@ -12,14 +11,31 @@ import graphql.schema.*;
 import java.util.List;
 import java.util.concurrent.ConcurrentMap;
 
-import static graphql.Scalars.GraphQLString;
-
 /**
  * Created by tomas on 25.6.17.
  */
 public class InputGenerator {
     private final ConcurrentMap<String, GraphQLInputObjectType> inputMap = Maps.newConcurrentMap();
-    private final ClassConvertor convertor = new ClassConvertorImpl();
+    private final ClassConvertor convertor;
+
+    public InputGenerator(ClassConvertor classConvertor) {
+        this.convertor = classConvertor;
+    }
+
+    private GraphQLInputType createType(GraphQLInputType inputType, String name) {
+        if (inputType instanceof GraphQLScalarType) {
+            return inputType;
+        } else if (inputType instanceof GraphQLEnumType) {
+            return inputType;
+        } else {
+            inputMap.putIfAbsent(name, GraphQLInputObjectType.newInputObject()
+                    .name(name)
+                    .description(((GraphQLInputObjectType) inputType).getDescription())
+                    .fields(((GraphQLInputObjectType) inputType).getFields())
+                    .build());
+        }
+        return inputMap.get(name);
+    }
 
     public List<GraphQLArgument> createRootField(RecordSchema idSchema) {
         List<GraphQLArgument> arguments = Lists.newArrayList();
@@ -27,37 +43,17 @@ public class InputGenerator {
             return arguments;
         }
         for (Field field : idSchema.getFields()) {
-            GraphQLInputType inputType = convertor.getInputType(field.getSchema());
-            String name = inputType.getName() + "_arg";
-            if (inputType instanceof GraphQLEnumType) {
-                inputMap.putIfAbsent(name, GraphQLInputObjectType.newInputObject()
-                        .name(name)
-                        .description(((GraphQLEnumType) inputType).getDescription())
-                        .fields(Lists.newArrayList(GraphQLInputObjectField
-                                .newInputObjectField()
-                                .name("enum_" + field.getName())
-                                .description("String for enum")
-                                .type(GraphQLString)
-                                .build()))
-                        .build());
-                inputType = inputMap.get(name);
-            } else if (inputType instanceof GraphQLScalarType == false) {
-                inputMap.putIfAbsent(name, GraphQLInputObjectType.newInputObject()
-                        .name(name)
-                        .description(((GraphQLInputObjectType) inputType).getDescription())
-                        .fields(((GraphQLInputObjectType) inputType).getFields())
-                        .build());
+            GraphQLInputType createdType = convertor.getInputType(field.getSchema());
+            GraphQLInputType toArgument;
+            String name = createdType.getName() + "_arg";
+            toArgument = createType(createdType, name);
 
-                inputType = inputMap.get(name);
-            }
-            Preconditions.checkNotNull(inputType);
-
-            GraphQLArgument build = GraphQLArgument.newArgument()
+            GraphQLArgument argument = GraphQLArgument.newArgument()
                     .name(field.getName())
-                    .type(inputType)
+                    .type(toArgument)
                     .description("This is input argument for field name: " + field.getName())
                     .build();
-            arguments.add(build);
+            arguments.add(argument);
         }
 
         return arguments;
