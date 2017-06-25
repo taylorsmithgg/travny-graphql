@@ -1,4 +1,4 @@
-package cz.atlascon.travny.graphql;
+package cz.atlascon.travny.graphql.common;
 
 /**
  * Created by tomas on 13.6.17.

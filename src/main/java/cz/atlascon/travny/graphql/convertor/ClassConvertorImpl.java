@@ -1,23 +1,28 @@
-package cz.atlascon.travny.graphql;
+package cz.atlascon.travny.graphql.convertor;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import cz.atlascon.travny.schemas.EnumSchema;
 import cz.atlascon.travny.schemas.Schema;
 import cz.atlascon.travny.types.EnumConstant;
 import cz.atlascon.travny.types.Type;
 import graphql.AssertException;
-import graphql.schema.*;
+import graphql.schema.GraphQLEnumType;
+import graphql.schema.GraphQLInputType;
+import graphql.schema.GraphQLOutputType;
+import graphql.schema.GraphQLScalarType;
 
 import java.util.Collection;
+import java.util.concurrent.ConcurrentMap;
 
-import static cz.atlascon.travny.graphql.Common.convertToName;
+import static cz.atlascon.travny.graphql.common.Common.convertToName;
 import static graphql.Scalars.*;
 
 /**
- * Created by tomas on 13.6.17.
+ * Created by tomas on 25.6.17.
  */
-public class JavaClassConvertor<E extends Enum<E>> implements ClassConvertor {
+public class ClassConvertorImpl<E extends Enum> implements ClassConvertor {
+    private final ConcurrentMap<String, GraphQLEnumType> enumMap = Maps.newConcurrentMap();
 
     @Override
     public GraphQLScalarType getByClass(Class aClass) {
@@ -37,18 +42,8 @@ public class JavaClassConvertor<E extends Enum<E>> implements ClassConvertor {
             return GraphQLChar;
         } else if (aClass.equals(Float.class)) {
             return GraphQLFloat;
-        } else
-//            if (aClass.equals(Enum.class)) {
-//            Enum[] enumConstants = (Enum[]) aClass.getEnumConstants();
-//            GraphQLEnumType.Builder qlEnum = GraphQLEnumType.newEnum()
-//                    .name(convertToName(aClass.getName()));
-//            for(Enum o : enumConstants){
-//                qlEnum.value(o.name());
-//            }
-//            return qlEnum.build();
-//        }
-
-            throw new AssertException("Not a valid class type: " + aClass.getName());
+        }
+        throw new AssertException("Not a valid class type: " + aClass.getName());
     }
 
 
@@ -73,23 +68,39 @@ public class JavaClassConvertor<E extends Enum<E>> implements ClassConvertor {
     @Override
     public GraphQLInputType getInputType(Schema schema) {
         if (schema.getType() == Type.ENUM) {
-            return GraphQLString;
+            return createEnum(schema);
         }
         return (GraphQLInputType) createCommon(schema);
     }
 
-    private GraphQLObjectType createEnum(Schema schema) {
+    private GraphQLEnumType createEnum(Schema schema) {
         EnumSchema enumSchema = (EnumSchema) schema;
         Collection<EnumConstant> constants = enumSchema.getConstants();
-        GraphQLEnumType.Builder name = GraphQLEnumType.newEnum().name(convertToName(((EnumSchema) schema).getName()));
+        String eName = convertToName(((EnumSchema) schema).getName());
+        GraphQLEnumType.Builder enumQL = GraphQLEnumType.newEnum().name(eName);
+
+        Class<E> aClass = null;
+        try {
+            aClass = (Class<E>) Class.forName(((EnumSchema) schema).getName());
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        E[] enumConstants = aClass.getEnumConstants();
 
         for (EnumConstant constant : constants) {
-            name.value(constant.getConstant());
+            enumQL.value(constant.getConstant(), findValues(constant.getConstant(), enumConstants) ,constant.getConstant());
         }
-        return GraphQLObjectType.newObject().name(convertToName(((EnumSchema) schema).getName()))
-                .field(GraphQLFieldDefinition.newFieldDefinition().name("constant").type(GraphQLString).build())
-                .field(GraphQLFieldDefinition.newFieldDefinition().name("ordinal").type(GraphQLInt).build())
-                .description("enum for: " + enumSchema.getName())
-                .build();
+        enumMap.putIfAbsent(eName, enumQL.build());
+
+        return enumMap.get(eName);
+    }
+
+    private Object findValues(String constant, E[] enumConstants) {
+        for(int i = 0; i < enumConstants.length; i++){
+            if(enumConstants[i].name().equals(constant)){
+                return enumConstants[i];
+            }
+        }
+        return null;
     }
 }
