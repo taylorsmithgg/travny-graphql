@@ -1,7 +1,6 @@
-package cz.atlascon.travny.graphql;
+package cz.atlascon.travny.graphql.convertor;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 import cz.atlascon.travny.schemas.EnumSchema;
 import cz.atlascon.travny.schemas.Schema;
 import cz.atlascon.travny.types.EnumConstant;
@@ -11,13 +10,14 @@ import graphql.schema.*;
 
 import java.util.Collection;
 
-import static cz.atlascon.travny.graphql.Common.convertToName;
+import static cz.atlascon.travny.graphql.common.Common.convertToName;
 import static graphql.Scalars.*;
+import static graphql.Scalars.GraphQLByte;
 
 /**
- * Created by tomas on 13.6.17.
+ * Created by tomas on 25.6.17.
  */
-public class JavaClassConvertor<E extends Enum<E>> implements ClassConvertor {
+public class ClassConvertorImpl implements ClassConvertor {
 
     @Override
     public GraphQLScalarType getByClass(Class aClass) {
@@ -37,18 +37,8 @@ public class JavaClassConvertor<E extends Enum<E>> implements ClassConvertor {
             return GraphQLChar;
         } else if (aClass.equals(Float.class)) {
             return GraphQLFloat;
-        } else
-//            if (aClass.equals(Enum.class)) {
-//            Enum[] enumConstants = (Enum[]) aClass.getEnumConstants();
-//            GraphQLEnumType.Builder qlEnum = GraphQLEnumType.newEnum()
-//                    .name(convertToName(aClass.getName()));
-//            for(Enum o : enumConstants){
-//                qlEnum.value(o.name());
-//            }
-//            return qlEnum.build();
-//        }
-
-            throw new AssertException("Not a valid class type: " + aClass.getName());
+        }
+        throw new AssertException("Not a valid class type: " + aClass.getName());
     }
 
 
@@ -73,23 +63,20 @@ public class JavaClassConvertor<E extends Enum<E>> implements ClassConvertor {
     @Override
     public GraphQLInputType getInputType(Schema schema) {
         if (schema.getType() == Type.ENUM) {
-            return GraphQLString;
+            return createEnum(schema);
         }
         return (GraphQLInputType) createCommon(schema);
     }
 
-    private GraphQLObjectType createEnum(Schema schema) {
+    private GraphQLEnumType createEnum(Schema schema) {
         EnumSchema enumSchema = (EnumSchema) schema;
         Collection<EnumConstant> constants = enumSchema.getConstants();
         GraphQLEnumType.Builder name = GraphQLEnumType.newEnum().name(convertToName(((EnumSchema) schema).getName()));
 
         for (EnumConstant constant : constants) {
-            name.value(constant.getConstant());
+            name.value(constant.getConstant(), constant.getOrd());
         }
-        return GraphQLObjectType.newObject().name(convertToName(((EnumSchema) schema).getName()))
-                .field(GraphQLFieldDefinition.newFieldDefinition().name("constant").type(GraphQLString).build())
-                .field(GraphQLFieldDefinition.newFieldDefinition().name("ordinal").type(GraphQLInt).build())
-                .description("enum for: " + enumSchema.getName())
-                .build();
+
+        return name.build();
     }
 }
