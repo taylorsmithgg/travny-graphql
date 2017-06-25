@@ -4,7 +4,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import cz.atlascon.travny.graphql.convertor.ClassConvertor;
-import cz.atlascon.travny.graphql.convertor.ClassConvertorImpl;
 import cz.atlascon.travny.schemas.*;
 import cz.atlascon.travny.types.Type;
 import graphql.schema.*;
@@ -76,6 +75,11 @@ public class OutputGenerator {
                     graphQLType = convertor.getOutputType(((ListSchema) field.getSchema()).getValueSchema());
                 }
                 outputType = GraphQLList.list(graphQLType);
+//            } else if (field.getSchema() instanceof MapSchema) {
+//                // TODO prepared for map implementation
+//                GraphQLOutputType outputType1 = convertor.getOutputType(field.getSchema());
+//                outputMap.putIfAbsent(convertToName(field.getName()), outputType1);
+//                return outputMap.get()
             } else {
                 outputType = convertor.getOutputType(field.getSchema());
                 Preconditions.checkArgument(outputType instanceof GraphQLScalarType);
