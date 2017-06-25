@@ -3,7 +3,6 @@ package cz.atlascon.travny.graphql.input;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import cz.atlascon.travny.graphql.convertor.ClassConvertor;
-import cz.atlascon.travny.graphql.convertor.ClassConvertorImpl;
 import cz.atlascon.travny.schemas.Field;
 import cz.atlascon.travny.schemas.RecordSchema;
 import graphql.schema.*;
@@ -44,9 +43,8 @@ public class InputGenerator {
         }
         for (Field field : idSchema.getFields()) {
             GraphQLInputType createdType = convertor.getInputType(field.getSchema());
-            GraphQLInputType toArgument;
             String name = createdType.getName() + "_arg";
-            toArgument = createType(createdType, name);
+            GraphQLInputType toArgument = createType(createdType, name);
 
             GraphQLArgument argument = GraphQLArgument.newArgument()
                     .name(field.getName())

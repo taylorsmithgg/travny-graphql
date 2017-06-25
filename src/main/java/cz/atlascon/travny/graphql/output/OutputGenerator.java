@@ -57,29 +57,7 @@ public class OutputGenerator {
                 String className = convertToName(((RecordSchema) field.getSchema()).getName());
                 outputType = createType(createFields(((RecordSchema) field.getSchema()).getFields()), className);
             } else if (field.getSchema() instanceof ListSchema) {
-                GraphQLType graphQLType;
-                Schema listSchema = ((ListSchema) field.getSchema()).getValueSchema();
-                if (Type.RECORD == listSchema.getType()) {
-                    String className = convertToName(((RecordSchema) listSchema).getName());
-                    outputMap.putIfAbsent(className, GraphQLObjectType.newObject()
-                            .fields(createFields((((RecordSchema) listSchema).getFields())))
-                            .name(className)
-                            .build());
-                    graphQLType = outputMap.get(className);
-
-                } else if (Type.ENUM == ((ListSchema) field.getSchema()).getValueSchema().getType()) {
-                    String className = convertToName(((EnumSchema) listSchema).getName());
-                    outputMap.putIfAbsent(className, convertor.getOutputType(((ListSchema) field.getSchema()).getValueSchema()));
-                    graphQLType = outputMap.get(className);
-                } else {
-                    graphQLType = convertor.getOutputType(((ListSchema) field.getSchema()).getValueSchema());
-                }
-                outputType = GraphQLList.list(graphQLType);
-//            } else if (field.getSchema() instanceof MapSchema) {
-//                // TODO prepared for map implementation
-//                GraphQLOutputType outputType1 = convertor.getOutputType(field.getSchema());
-//                outputMap.putIfAbsent(convertToName(field.getName()), outputType1);
-//                return outputMap.get()
+                outputType = createListSchema(field);
             } else {
                 outputType = convertor.getOutputType(field.getSchema());
                 Preconditions.checkArgument(outputType instanceof GraphQLScalarType);
@@ -95,5 +73,31 @@ public class OutputGenerator {
         }
 
         return qlFields;
+    }
+
+    private GraphQLOutputType createListSchema(Field field) {
+        GraphQLType graphQLType;
+        Schema listSchema = ((ListSchema) field.getSchema()).getValueSchema();
+        if (Type.RECORD == listSchema.getType()) {
+            String className = convertToName(((RecordSchema) listSchema).getName());
+            outputMap.putIfAbsent(className, GraphQLObjectType.newObject()
+                    .fields(createFields((((RecordSchema) listSchema).getFields())))
+                    .name(className)
+                    .build());
+            graphQLType = outputMap.get(className);
+
+        } else if (Type.ENUM == ((ListSchema) field.getSchema()).getValueSchema().getType()) {
+            String className = convertToName(((EnumSchema) listSchema).getName());
+            outputMap.putIfAbsent(className, convertor.getOutputType(((ListSchema) field.getSchema()).getValueSchema()));
+            graphQLType = outputMap.get(className);
+        } else {
+            graphQLType = convertor.getOutputType(((ListSchema) field.getSchema()).getValueSchema());
+        }
+//            } else if (field.getSchema() instanceof MapSchema) {
+//                // TODO prepared for map implementation
+//                GraphQLOutputType outputType1 = convertor.getOutputType(field.getSchema());
+//                outputMap.putIfAbsent(convertToName(field.getName()), outputType1);
+//                return outputMap.get()
+        return GraphQLList.list(graphQLType);
     }
 }

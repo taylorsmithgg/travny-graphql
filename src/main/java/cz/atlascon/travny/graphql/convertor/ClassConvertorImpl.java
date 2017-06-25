@@ -58,6 +58,7 @@ public class ClassConvertorImpl<E extends Enum> implements ClassConvertor {
         } else if (schema.getType() == Type.BYTES) {
             return GraphQLByte;
         } else if (schema.getType() == Type.MAP) {
+            // TODO implement map
             return GraphQLByte;
         } else {
             return getByClass(schema.getType().getJavaClass());
@@ -88,19 +89,20 @@ public class ClassConvertorImpl<E extends Enum> implements ClassConvertor {
         E[] enumConstants = aClass.getEnumConstants();
 
         for (EnumConstant constant : constants) {
-            enumQL.value(constant.getConstant(), findValues(constant.getConstant(), enumConstants) ,constant.getConstant());
+            String constantValue = constant.getConstant();
+            enumQL.value(constant.getConstant(), findValue(constantValue, enumConstants), constant.getConstant());
         }
         enumMap.putIfAbsent(eName, enumQL.build());
 
         return enumMap.get(eName);
     }
 
-    private Object findValues(String constant, E[] enumConstants) {
-        for(int i = 0; i < enumConstants.length; i++){
-            if(enumConstants[i].name().equals(constant)){
+    private Object findValue(String constant, E[] enumConstants) {
+        for (int i = 0; i < enumConstants.length; i++) {
+            if (enumConstants[i].name().equals(constant)) {
                 return enumConstants[i];
             }
         }
-        return null;
+        throw new AssertException("Value: " + constant + " not found in given constants!");
     }
 }
