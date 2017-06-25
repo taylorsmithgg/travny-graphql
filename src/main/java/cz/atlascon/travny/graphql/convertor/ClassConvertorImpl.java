@@ -21,7 +21,7 @@ import static graphql.Scalars.*;
 /**
  * Created by tomas on 25.6.17.
  */
-public class ClassConvertorImpl implements ClassConvertor {
+public class ClassConvertorImpl<E extends Enum> implements ClassConvertor {
     private final ConcurrentMap<String, GraphQLEnumType> enumMap = Maps.newConcurrentMap();
 
     @Override
@@ -79,11 +79,28 @@ public class ClassConvertorImpl implements ClassConvertor {
         String eName = convertToName(((EnumSchema) schema).getName());
         GraphQLEnumType.Builder enumQL = GraphQLEnumType.newEnum().name(eName);
 
+        Class<E> aClass = null;
+        try {
+            aClass = (Class<E>) Class.forName(((EnumSchema) schema).getName());
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        E[] enumConstants = aClass.getEnumConstants();
+
         for (EnumConstant constant : constants) {
-            enumQL.value(constant.getConstant(), constant.getOrd());
+            enumQL.value(constant.getConstant(), findValues(constant.getConstant(), enumConstants) ,constant.getConstant());
         }
         enumMap.putIfAbsent(eName, enumQL.build());
 
         return enumMap.get(eName);
+    }
+
+    private Object findValues(String constant, E[] enumConstants) {
+        for(int i = 0; i < enumConstants.length; i++){
+            if(enumConstants[i].name().equals(constant)){
+                return enumConstants[i];
+            }
+        }
+        return null;
     }
 }
