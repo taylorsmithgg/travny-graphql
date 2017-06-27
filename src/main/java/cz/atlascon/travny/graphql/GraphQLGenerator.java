@@ -1,8 +1,7 @@
 package cz.atlascon.travny.graphql;
 
-import cz.atlascon.travny.records.Record;
+import com.google.common.collect.Lists;
 import cz.atlascon.travny.schemas.RecordSchema;
-import cz.atlascon.travny.shaded.com.google.common.collect.Lists;
 import graphql.schema.DataFetcher;
 import graphql.schema.GraphQLSchema;
 
@@ -14,28 +13,22 @@ import java.util.List;
  */
 public interface GraphQLGenerator {
 
-    default GraphQLSchema generateSchema(Record item) {
-        return generateSchema(item.getSchema());
-    }
-
-    default GraphQLSchema generateSchema(RecordSchema schema){
-        return generateSchemaWFetcher(Lists.newArrayList(schema), null);
-    }
-
-    default GraphQLSchema generateSchema(List<RecordSchema> recordSchemas){
-        return generateSchemaWFetcher(recordSchemas, null);
-    }
-
-    default GraphQLSchema generateSchema(RecordSchema... recordSchemas) {
-        return generateSchema(Lists.newArrayList(recordSchemas));
-    }
-
     /**
-     * To each root field add dataFetcher and use {@link #generateSchema(List)}
+     * To each root field add dataFetcher and use }
      * you should overide this
+     *
      * @param recordSchemas
      * @param dataFetcher
      * @return
      */
-    GraphQLSchema generateSchemaWFetcher(List<RecordSchema> recordSchemas, DataFetcher<Collection<?>> dataFetcher);
+    GraphQLSchema generateSchema(List<RecordSchema> recordSchemas, DataFetcher<Collection<?>> dataFetcher);
+
+    default GraphQLSchema generateSchema(List<RecordSchema> recordSchemas) {
+        return generateSchema(recordSchemas, null);
+    }
+
+    default GraphQLSchema generateSchema(RecordSchema recordSchemas) {
+        return generateSchema(Lists.newArrayList(recordSchemas), null);
+    }
+
 }

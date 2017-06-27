@@ -3,21 +3,28 @@ package cz.atlascon.travny.graphql;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import cz.atlascon.travny.graphql.convertor.ClassConvertor;
 import cz.atlascon.travny.graphql.convertor.ClassConvertorImpl;
 import cz.atlascon.travny.graphql.input.InputGenerator;
 import cz.atlascon.travny.graphql.output.OutputGenerator;
 import cz.atlascon.travny.schemas.RecordSchema;
 import graphql.schema.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 
 /**
  * Created by tomas on 6.6.17.
  */
 public class GraphQLGeneratorImpl implements GraphQLGenerator {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(GraphQLGeneratorImpl.class);
     private final InputGenerator inputGenerator;
     private final OutputGenerator outputGenerator;
 
@@ -28,12 +35,25 @@ public class GraphQLGeneratorImpl implements GraphQLGenerator {
     }
 
     @Override
-    public GraphQLSchema generateSchemaWFetcher(List<RecordSchema> recordSchemas, DataFetcher<Collection<?>> dataFetcher) {
+    public GraphQLSchema generateSchema(List<RecordSchema> recordSchemas, DataFetcher<Collection<?>> dataFetcher) {
         Preconditions.checkNotNull(recordSchemas, "Not Valid use recordSchemas cannot be null!");
         Preconditions.checkArgument(!recordSchemas.isEmpty(), "Not valid Use, recordSchemas cannot be empty!");
-        return GraphQLSchema.newSchema()
-                .query(createRootObject(createTypes(recordSchemas, dataFetcher)))
-                .build();
+        outputGenerator.setSchemaSupplier(createSupplier(recordSchemas));
+        LOGGER.info("Creating types schemas");
+        List<GraphQLFieldDefinition> types = createTypes(recordSchemas, dataFetcher);
+        LOGGER.info("Types schemas created");
+        LOGGER.info("Creating root schema");
+        GraphQLSchema root = GraphQLSchema.newSchema()
+                .query(createRootObject(types))
+                .build(Sets.newHashSet(outputGenerator.getTypeMap().values()));
+        LOGGER.info("Root schema created");
+        return root;
+    }
+
+    private Function<String, RecordSchema> createSupplier(List<RecordSchema> recordSchemas) {
+        Map<String, RecordSchema> m = Maps.newHashMap();
+        recordSchemas.stream().forEach(rs -> m.put(rs.getName(), rs));
+        return n -> m.get(n);
     }
 
     private List<GraphQLFieldDefinition> createTypes(List<RecordSchema> recordSchemas, DataFetcher dataFetcher) {

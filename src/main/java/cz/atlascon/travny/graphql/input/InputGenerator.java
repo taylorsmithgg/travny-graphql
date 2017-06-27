@@ -27,13 +27,12 @@ public class InputGenerator {
         } else if (inputType instanceof GraphQLEnumType) {
             return inputType;
         } else {
-            inputMap.putIfAbsent(name, GraphQLInputObjectType.newInputObject()
-                    .name(name)
+            return inputMap.computeIfAbsent(name, n -> GraphQLInputObjectType.newInputObject()
+                    .name(n)
                     .description(((GraphQLInputObjectType) inputType).getDescription())
                     .fields(((GraphQLInputObjectType) inputType).getFields())
                     .build());
         }
-        return inputMap.get(name);
     }
 
     public List<GraphQLArgument> createRootField(RecordSchema idSchema) {
