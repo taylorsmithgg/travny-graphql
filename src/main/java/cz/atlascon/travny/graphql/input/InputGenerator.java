@@ -41,16 +41,18 @@ public class InputGenerator {
             return arguments;
         }
         for (Field field : idSchema.getFields()) {
-            GraphQLInputType createdType = convertor.getInputType(field.getSchema());
-            String name = createdType.getName() + "_arg";
-            GraphQLInputType toArgument = createType(createdType, name);
+            if (!field.isRemoved()) {
+                GraphQLInputType createdType = convertor.getInputType(field.getSchema());
+                String name = createdType.getName() + "_arg";
+                GraphQLInputType toArgument = createType(createdType, name);
 
-            GraphQLArgument argument = GraphQLArgument.newArgument()
-                    .name(field.getName())
-                    .type(toArgument)
-                    .description("This is input argument for field name: " + field.getName())
-                    .build();
-            arguments.add(argument);
+                GraphQLArgument argument = GraphQLArgument.newArgument()
+                        .name(field.getName())
+                        .type(toArgument)
+                        .description("This is input argument for field name: " + field.getName())
+                        .build();
+                arguments.add(argument);
+            }
         }
 
         return arguments;

@@ -100,9 +100,11 @@ public class OutputGenerator {
         } else {
             LOGGER.info("Creating type for {}", className);
             List<GraphQLFieldDefinition> fieldDefs = Lists.newArrayList();
-            for (Field f : recordSchema.getFields()) {
-                GraphQLFieldDefinition fieldDef = createField(f.getName(), createType(f.getSchema()));
-                fieldDefs.add(fieldDef);
+            for (Field field : recordSchema.getFields()) {
+                if(!field.isRemoved()){
+                    GraphQLFieldDefinition fieldDef = createField(field.getName(), createType(field.getSchema()));
+                    fieldDefs.add(fieldDef);
+                }
             }
             GraphQLObjectType objectType = GraphQLObjectType
                     .newObject()
