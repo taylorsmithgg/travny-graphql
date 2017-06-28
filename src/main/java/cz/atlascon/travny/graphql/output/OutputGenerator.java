@@ -101,7 +101,17 @@ public class OutputGenerator {
             LOGGER.info("Creating type for {}", className);
             List<GraphQLFieldDefinition> fieldDefs = Lists.newArrayList();
             for (Field field : recordSchema.getFields()) {
-                if(!field.isRemoved()){
+                if (!field.isRemoved()) {
+                    if (field.getSchema() instanceof RecordSchema) {
+                        String fieldSchemaName = ((RecordSchema) field.getSchema()).getName();
+                        if (SchemaNameUtils.isIdSchema(fieldSchemaName) &&
+                                SchemaNameUtils.getRecordForId(fieldSchemaName).equals(recordSchema.getName())) {
+                            // ID schema to itself
+                            GraphQLFieldDefinition fieldDef = createField(field.getName(), new GraphQLTypeReference(className));
+                            fieldDefs.add(fieldDef);
+                            continue;
+                        }
+                    }
                     GraphQLFieldDefinition fieldDef = createField(field.getName(), createType(field.getSchema()));
                     fieldDefs.add(fieldDef);
                 }

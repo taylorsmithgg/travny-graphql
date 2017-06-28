@@ -35,10 +35,10 @@ public class GraphQLGeneratorImpl implements GraphQLGenerator {
     }
 
     @Override
-    public GraphQLSchema generateSchema(List<RecordSchema> recordSchemas, DataFetcher<Collection<?>> dataFetcher) {
+    public GraphQLSchema generateSchema(List<RecordSchema> recordSchemas, Function<String, RecordSchema> schemaSupplier, DataFetcher<Collection<?>> dataFetcher) {
         Preconditions.checkNotNull(recordSchemas, "Not Valid use recordSchemas cannot be null!");
         Preconditions.checkArgument(!recordSchemas.isEmpty(), "Not valid Use, recordSchemas cannot be empty!");
-        outputGenerator.setSchemaSupplier(createSupplier(recordSchemas));
+        outputGenerator.setSchemaSupplier(createSupplier(schemaSupplier, recordSchemas));
         LOGGER.info("Creating types schemas");
         List<GraphQLFieldDefinition> types = createTypes(recordSchemas, dataFetcher);
         LOGGER.info("Types schemas created");
@@ -50,10 +50,19 @@ public class GraphQLGeneratorImpl implements GraphQLGenerator {
         return root;
     }
 
-    private Function<String, RecordSchema> createSupplier(List<RecordSchema> recordSchemas) {
+    private Function<String, RecordSchema> createSupplier(Function<String, RecordSchema> suppliedSupplier,
+                                                          List<RecordSchema> recordSchemas) {
         Map<String, RecordSchema> m = Maps.newHashMap();
         recordSchemas.stream().forEach(rs -> m.put(rs.getName(), rs));
-        return n -> m.get(n);
+        return n -> {
+            if (suppliedSupplier != null) {
+                RecordSchema itm = suppliedSupplier.apply(n);
+                if (itm != null) {
+                    return itm;
+                }
+            }
+            return m.get(n);
+        };
     }
 
     private List<GraphQLFieldDefinition> createTypes(List<RecordSchema> recordSchemas, DataFetcher dataFetcher) {
