@@ -85,30 +85,20 @@ public class OutputGenerator {
     }
 
     private GraphQLObjectType createRecordType(RecordSchema recordSchema) {
+        // type for ID schema = type for REC schemas
+        if (SchemaNameUtils.isIdSchema(recordSchema.getName())) {
+            String recSchemaName = SchemaNameUtils.getRecordForId(recordSchema.getName());
+            recordSchema = schemaSupplier.apply(recSchemaName);
+            if (recordSchema == null) {
+                throw new NullPointerException("Schema " + recSchemaName + " not found!");
+            }
+        }
         String className = convertToName(recordSchema.getName());
         GraphQLOutputType existing = typeMap.get(className);
         if (existing != null) {
             return (GraphQLObjectType) existing;
         } else {
             LOGGER.info("Creating type for {}", className);
-            if (!SchemaNameUtils.isIdSchema(recordSchema.getName())) {
-                // if this is a record schema, create ID schema with reference to record first
-                // rec schema for ID
-                RecordSchema idSchema = recordSchema.getIdSchema();
-                if (idSchema != null) {
-                    GraphQLObjectType idType = createRecordType(idSchema);
-                    // reference to object
-                    GraphQLTypeReference typeRef = new GraphQLTypeReference(className);
-                    List<GraphQLFieldDefinition> idFields = Lists.newArrayList(idType.getFieldDefinitions());
-                    idFields.add(createField("_resolved", typeRef));
-                    GraphQLObjectType idObjectType = new GraphQLObjectType.Builder()
-                            .fields(idFields)
-                            .name(idType.getName())
-                            .description(idType.getDescription())
-                            .build();
-                    typeMap.put(idObjectType.getName(), idObjectType);
-                }
-            }
             List<GraphQLFieldDefinition> fieldDefs = Lists.newArrayList();
             for (Field f : recordSchema.getFields()) {
                 GraphQLFieldDefinition fieldDef = createField(f.getName(), createType(f.getSchema()));

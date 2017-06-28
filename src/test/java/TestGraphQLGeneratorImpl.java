@@ -143,7 +143,9 @@ public class TestGraphQLGeneratorImpl {
 
         GraphQLSchema graphQLSchema = generator.generateSchema(Lists.newArrayList(
                 (RecordSchema) parser.getSchema("cz.atlascon.app.LCRrez3"),
-                (RecordSchema) parser.getSchema("cz.atlascon.app.LCRrez2"))
+                (RecordSchema) parser.getSchema("cz.atlascon.app.LCRrez2"),
+                (RecordSchema) parser.getSchema("cz.atlascon.app.LCRpredpis2"),
+                (RecordSchema) parser.getSchema("cz.atlascon.app.LCRpredpis"))
         );
     }
 
