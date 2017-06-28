@@ -2,17 +2,14 @@ import com.google.common.collect.Lists;
 import cz.atlascon.travny.graphql.GraphQLGenerator;
 import cz.atlascon.travny.graphql.GraphQLGeneratorImpl;
 import cz.atlascon.travny.parser.Parser;
-import cz.atlascon.travny.schemas.EnumSchema;
 import cz.atlascon.travny.schemas.ListSchema;
 import cz.atlascon.travny.schemas.RecordSchema;
 import cz.atlascon.travny.schemas.Schema;
 import cz.atlascon.travny.schemas.builders.RecordSchemaBuilder;
-import cz.atlascon.travny.types.EnumConstantImpl;
 import graphql.AssertException;
 import graphql.Scalars;
 import graphql.schema.*;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -95,14 +92,25 @@ public class TestGraphQLGeneratorImpl {
         Assert.assertEquals("Float", floatDefinition.getType().getName());
     }
 
-    @Ignore
     @Test
     public void convertingEnum() {
-        RecordSchema schema2 = RecordSchema.newBuilder("Schema2")
-                .addField(Schema.INT, "someInt")
-                .addField(new EnumSchema("someName", Lists.newArrayList(new EnumConstantImpl(0, "ano"), new EnumConstantImpl(0, "ne"))), "enum")
+        RecordSchema schema2 = RecordSchema.newBuilder("someName")
+                .addField(SomeEnum.getEnumSchema(), "enumField")
                 .build();
-        generator.generateSchema(schema2);
+        GraphQLSchema graphQLSchema = generator.generateSchema(schema2);
+        GraphQLType somename = ((GraphQLList) graphQLSchema.getQueryType().getFieldDefinition("somename").getType()).getWrappedType();
+        GraphQLOutputType enumField = ((GraphQLObjectType) somename).getFieldDefinition("enumField").getType();
+        Assert.assertTrue(enumField instanceof GraphQLEnumType);
+        GraphQLEnumType enumType = (GraphQLEnumType) enumField;
+        List<GraphQLEnumValueDefinition> glEnumVals = enumType.getValues();
+        SomeEnum[] enumVal = SomeEnum.values();
+        Assert.assertEquals(enumVal.length, glEnumVals.size());
+
+        for (int i = 0; i < enumVal.length; i++) {
+            SomeEnum someEnum = enumVal[i];
+            GraphQLEnumValueDefinition valueDefinition = glEnumVals.get(i);
+            Assert.assertEquals(someEnum, valueDefinition.getValue());
+        }
     }
 
     @Test

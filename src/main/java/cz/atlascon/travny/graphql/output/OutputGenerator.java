@@ -48,12 +48,11 @@ public class OutputGenerator {
     private GraphQLFieldDefinition createField(String fieldName, GraphQLOutputType type) {
         Preconditions.checkNotNull(type, "Got null type");
         Preconditions.checkNotNull(fieldName, "Got null fieldName");
-        GraphQLFieldDefinition fieldDef = GraphQLFieldDefinition.newFieldDefinition()
+        return GraphQLFieldDefinition.newFieldDefinition()
                 .type(type)
                 //TODO implement default values .staticValue()
                 .name(fieldName)
                 .build();
-        return fieldDef;
     }
 
     private GraphQLOutputType createType(Schema schema) {
