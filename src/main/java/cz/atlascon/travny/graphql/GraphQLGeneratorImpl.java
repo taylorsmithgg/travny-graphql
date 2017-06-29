@@ -14,7 +14,6 @@ import graphql.schema.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -27,15 +26,19 @@ public class GraphQLGeneratorImpl implements GraphQLGenerator {
     private static final Logger LOGGER = LoggerFactory.getLogger(GraphQLGeneratorImpl.class);
     private final InputGenerator inputGenerator;
     private final OutputGenerator outputGenerator;
+    private DataFetcher dataFetcher;
 
-    public GraphQLGeneratorImpl() {
+    public GraphQLGeneratorImpl(DataFetcher dataFetcher) {
+        Preconditions.checkNotNull(dataFetcher);
+        this.dataFetcher = dataFetcher;
         ClassConvertor classConvertor = new ClassConvertorImpl();
         inputGenerator = new InputGenerator(classConvertor);
-        outputGenerator = new OutputGenerator(classConvertor);
+        outputGenerator = new OutputGenerator(classConvertor, dataFetcher);
     }
 
     @Override
-    public GraphQLSchema generateSchema(List<RecordSchema> recordSchemas, Function<String, RecordSchema> schemaSupplier, DataFetcher<Collection<?>> dataFetcher) {
+    public GraphQLSchema generateSchema(List<RecordSchema> recordSchemas,
+                                        Function<String, RecordSchema> schemaSupplier) {
         Preconditions.checkNotNull(recordSchemas, "Not Valid use recordSchemas cannot be null!");
         Preconditions.checkArgument(!recordSchemas.isEmpty(), "Not valid Use, recordSchemas cannot be empty!");
         outputGenerator.setSchemaSupplier(createSupplier(schemaSupplier, recordSchemas));
@@ -80,17 +83,15 @@ public class GraphQLGeneratorImpl implements GraphQLGenerator {
         List<String> strings = Splitter.on('.').splitToList(schema.getName());
         String fieldName = strings.get(strings.size() - 1).toLowerCase();
 
+        GraphQLOutputType outputType = outputGenerator.createRootField(schema);
+
         return GraphQLFieldDefinition.newFieldDefinition()
-                .type(GraphQLList.list(outputObjectPerField(schema)))
+                .type(GraphQLList.list(outputType))
                 .argument(argumentsPerRootField(schema.getIdSchema()))
                 .name(fieldName)
                 .dataFetcher(dataFetcher)
                 .description("Generated graphQL schema for class: " + schema.getName())
                 .build();
-    }
-
-    private GraphQLOutputType outputObjectPerField(RecordSchema schema) {
-        return outputGenerator.createRootField(schema);
     }
 
     private List<GraphQLArgument> argumentsPerRootField(RecordSchema idSchema) {

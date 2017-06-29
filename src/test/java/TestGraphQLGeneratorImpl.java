@@ -26,7 +26,13 @@ import static graphql.Scalars.*;
  * Created by tomas on 6.6.17.
  */
 public class TestGraphQLGeneratorImpl {
-    private final GraphQLGenerator generator = new GraphQLGeneratorImpl();
+
+    private final GraphQLGenerator generator = new GraphQLGeneratorImpl(new DataFetcher() {
+        @Override
+        public Object get(DataFetchingEnvironment environment) {
+            return null;
+        }
+    });
 
     private static final String INT_NUMBER_NAME = "intNumber";
     private static final String STRING_NAME = "string";

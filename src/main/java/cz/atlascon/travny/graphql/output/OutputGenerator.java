@@ -25,10 +25,15 @@ public class OutputGenerator {
     private static final Logger LOGGER = LoggerFactory.getLogger(OutputGenerator.class);
     private final ConcurrentMap<String, GraphQLOutputType> typeMap = Maps.newConcurrentMap();
     private final ClassConvertor convertor;
+    private DataFetcher dataFetcher;
     private volatile Function<String, RecordSchema> schemaSupplier = n -> null;
 
-    public OutputGenerator(ClassConvertor classConvertor) {
+    public OutputGenerator(ClassConvertor classConvertor,
+                           DataFetcher dataFetcher) {
+        Preconditions.checkNotNull(classConvertor);
+        Preconditions.checkNotNull(dataFetcher);
         this.convertor = classConvertor;
+        this.dataFetcher = dataFetcher;
     }
 
     public void setSchemaSupplier(Function<String, RecordSchema> schemaSupplier) {
