@@ -9,7 +9,7 @@ import cz.atlascon.travny.graphql.convertor.ClassConvertor;
 import cz.atlascon.travny.graphql.convertor.ClassConvertorImpl;
 import cz.atlascon.travny.graphql.input.InputGenerator;
 import cz.atlascon.travny.graphql.output.OutputGenerator;
-import cz.atlascon.travny.graphql.output.ResolvingDataFetcherFactory;
+import cz.atlascon.travny.graphql.output.TravnyFieldDataFetcherFactory;
 import cz.atlascon.travny.schemas.RecordSchema;
 import graphql.schema.*;
 import org.slf4j.Logger;
@@ -29,7 +29,7 @@ public class GraphQLGeneratorImpl implements GraphQLGenerator {
     private final OutputGenerator outputGenerator;
     private DataFetcher dataFetcher;
 
-    public GraphQLGeneratorImpl(DataFetcher dataFetcher, ResolvingDataFetcherFactory dataFetcherFactory) {
+    public GraphQLGeneratorImpl(DataFetcher dataFetcher, TravnyFieldDataFetcherFactory dataFetcherFactory) {
         Preconditions.checkNotNull(dataFetcher);
         this.dataFetcher = dataFetcher;
         ClassConvertor classConvertor = new ClassConvertorImpl();

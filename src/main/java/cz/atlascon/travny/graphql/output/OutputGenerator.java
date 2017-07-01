@@ -25,11 +25,11 @@ public class OutputGenerator {
     private static final Logger LOGGER = LoggerFactory.getLogger(OutputGenerator.class);
     private final ConcurrentMap<String, GraphQLOutputType> typeMap = Maps.newConcurrentMap();
     private final ClassConvertor convertor;
-    private ResolvingDataFetcherFactory dataFetcher;
+    private TravnyFieldDataFetcherFactory dataFetcher;
     private volatile Function<String, RecordSchema> schemaSupplier = n -> null;
 
     public OutputGenerator(ClassConvertor classConvertor,
-                           ResolvingDataFetcherFactory dataFetcher) {
+                           TravnyFieldDataFetcherFactory dataFetcher) {
         Preconditions.checkNotNull(classConvertor);
         Preconditions.checkNotNull(dataFetcher);
         this.convertor = classConvertor;
@@ -126,7 +126,7 @@ public class OutputGenerator {
                     continue;
                 }
                 GraphQLFieldDefinition fieldDef = createField(field.getName(), createType(field.getSchema()),
-                        dataFetcher.create(recordSchema, field));
+                        dataFetcher.create(field));
                 fieldDefs.add(fieldDef);
             }
 

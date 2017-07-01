@@ -1,9 +1,11 @@
 import com.google.common.collect.Lists;
 import cz.atlascon.travny.graphql.GraphQLGenerator;
 import cz.atlascon.travny.graphql.GraphQLGeneratorImpl;
-import cz.atlascon.travny.graphql.output.ResolvingDataFetcherFactory;
 import cz.atlascon.travny.parser.Parser;
-import cz.atlascon.travny.schemas.*;
+import cz.atlascon.travny.schemas.EnumSchema;
+import cz.atlascon.travny.schemas.ListSchema;
+import cz.atlascon.travny.schemas.RecordSchema;
+import cz.atlascon.travny.schemas.Schema;
 import cz.atlascon.travny.schemas.builders.RecordSchemaBuilder;
 import cz.atlascon.travny.types.EnumConstantImpl;
 import graphql.AssertException;
@@ -30,12 +32,7 @@ public class TestGraphQLGeneratorImpl {
         public Object get(DataFetchingEnvironment environment) {
             return null;
         }
-    }, new ResolvingDataFetcherFactory() {
-        @Override
-        public DataFetcher create(RecordSchema parent, Field field) {
-            return null;
-        }
-    });
+    }, field -> null);
 
     private static final String INT_NUMBER_NAME = "intNumber";
     private static final String STRING_NAME = "string";
