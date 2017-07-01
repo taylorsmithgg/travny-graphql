@@ -41,13 +41,16 @@ public class ResolvingFieldDataFetcherFactory implements TravnyFieldDataFetcherF
                     Field recField = recSchema.getField(field.getOrd());
                     if (recField != null) {
                         Record fullRecord = retrieveFc.apply((IdRecord) rec);
+                        if (fullRecord == null) {
+                            return null;
+                        }
                         return fullRecord.get(field.getOrd());
                     } else {
                         LOGGER.warn("Field " + field.getName() + " not found in object schema " + recName);
                         return null;
                     }
                 } catch (Exception e) {
-                    LOGGER.error("Class " + recName + " not found", e);
+                    LOGGER.error("Exception getting " + recName, e);
                     return null;
                 }
             } else {
