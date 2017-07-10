@@ -6,10 +6,12 @@ import cz.atlascon.travny.records.Record;
 import cz.atlascon.travny.schemas.Field;
 import cz.atlascon.travny.schemas.RecordSchema;
 import cz.atlascon.travny.schemas.Schemas;
+import cz.atlascon.travny.types.Type;
 import graphql.schema.DataFetcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Map;
 import java.util.function.Function;
 
 /**
@@ -44,7 +46,15 @@ public class ResolvingFieldDataFetcherFactory implements TravnyFieldDataFetcherF
                         if (fullRecord == null) {
                             return null;
                         }
-                        return fullRecord.get(field.getOrd());
+                        Object val = fullRecord.get(field.getOrd());
+                        if (val == null) {
+                            return null;
+                        }
+                        if (field.getSchema().getType() == Type.MAP) {
+                            return ((Map) val).entrySet();
+                        } else {
+                            return val;
+                        }
                     } else {
                         LOGGER.warn("Field " + field.getName() + " not found in object schema " + recName);
                         return null;
