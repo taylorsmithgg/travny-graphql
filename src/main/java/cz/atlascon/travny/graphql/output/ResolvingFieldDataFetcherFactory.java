@@ -12,7 +12,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Created by trehak on 1.7.17.
@@ -50,11 +52,7 @@ public class ResolvingFieldDataFetcherFactory implements TravnyFieldDataFetcherF
                         if (val == null) {
                             return null;
                         }
-                        if (field.getSchema().getType() == Type.MAP) {
-                            return ((Map) val).entrySet();
-                        } else {
-                            return val;
-                        }
+                        return convertIfMap(field, val);
                     } else {
                         LOGGER.warn("Field " + field.getName() + " not found in object schema " + recName);
                         return null;
@@ -64,8 +62,36 @@ public class ResolvingFieldDataFetcherFactory implements TravnyFieldDataFetcherF
                     return null;
                 }
             } else {
-                return rec.get(field.getName());
+                Object val = rec.get(field.getName());
+                return convertIfMap(field, val);
             }
         };
+    }
+
+    public static final class MapEntry {
+        private final Object key;
+        private final Object val;
+
+        public MapEntry(Object key, Object val) {
+            this.key = key;
+            this.val = val;
+        }
+
+        public Object getKey() {
+            return key;
+        }
+
+        public Object getVal() {
+            return val;
+        }
+    }
+
+    private Object convertIfMap(Field field, Object val) {
+        if (field.getSchema().getType() == Type.MAP) {
+            Set<Map.Entry> set = ((Map) val).entrySet();
+            return set.stream().map(e -> new MapEntry(e.getKey(), e.getValue())).collect(Collectors.toList());
+        } else {
+            return val;
+        }
     }
 }
