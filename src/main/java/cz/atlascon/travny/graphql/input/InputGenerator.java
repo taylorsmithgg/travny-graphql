@@ -1,14 +1,17 @@
 package cz.atlascon.travny.graphql.input;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import cz.atlascon.travny.graphql.convertor.ClassConvertor;
-import cz.atlascon.travny.schemas.Field;
-import cz.atlascon.travny.schemas.RecordSchema;
+import cz.atlascon.travny.schemas.*;
+import cz.atlascon.travny.types.Type;
 import graphql.schema.*;
 
 import java.util.List;
 import java.util.concurrent.ConcurrentMap;
+
+import static cz.atlascon.travny.graphql.common.Common.convertToName;
 
 /**
  * Created by tomas on 25.6.17.
@@ -21,17 +24,15 @@ public class InputGenerator {
         this.convertor = classConvertor;
     }
 
-    private GraphQLInputType createType(GraphQLInputType inputType, String name) {
-        if (inputType instanceof GraphQLScalarType) {
-            return inputType;
-        } else if (inputType instanceof GraphQLEnumType) {
-            return inputType;
+    private GraphQLInputType createType(Schema schema) {
+        Preconditions.checkNotNull(schema, "Got null schema");
+        if (Type.ENUM == schema.getType()) {
+            return convertor.getInputType(schema);
+        } else if (Type.LIST == schema.getType()) {
+            Schema valueSchema = ((ListSchema) schema).getValueSchema();
+            return GraphQLList.list(createType(valueSchema));
         } else {
-            return inputMap.computeIfAbsent(name, n -> GraphQLInputObjectType.newInputObject()
-                    .name(n)
-                    .description(((GraphQLInputObjectType) inputType).getDescription())
-                    .fields(((GraphQLInputObjectType) inputType).getFields())
-                    .build());
+            return convertor.getInputType(schema);
         }
     }
 
@@ -42,9 +43,7 @@ public class InputGenerator {
         }
         for (Field field : idSchema.getFields()) {
             if (!field.isRemoved()) {
-                GraphQLInputType createdType = convertor.getInputType(field.getSchema());
-                String name = createdType.getName() + "_arg";
-                GraphQLInputType toArgument = createType(createdType, name);
+                GraphQLInputType toArgument = createType(field.getSchema());
 
                 GraphQLArgument argument = GraphQLArgument.newArgument()
                         .name(field.getName())

@@ -157,7 +157,7 @@ public class TestGraphQLGeneratorImpl {
 
     @Test
     public void shouldProduceValidSchemaWithIDarguments() {
-        final String ID_INT = "idInt";
+        final String ID_INT = "idInt_arg";
         final String ID_SCHEMA = "idSchema";
         final String SCHEMA_W_ID = "schemaWithId";
         RecordSchema idSchema = RecordSchema.newBuilder(ID_SCHEMA)
@@ -318,6 +318,27 @@ public class TestGraphQLGeneratorImpl {
         Set<String> schemaNames = parser.getSchemaNames();
 
         GraphQLSchema graphQLSchema = generator.generateSchema((RecordSchema) parser.getSchema("cz.atlascon.etic.Propertyvalue"));
+    }
+
+    @Test
+    public void shouldProduceValidInputList() {
+        String name = "name";
+        RecordSchema idSchema = RecordSchemaBuilder.newBuilder("cz.atlascon.id")
+                .addField(ListSchema.of(Schema.STRING), name).build();
+        RecordSchema schema = RecordSchemaBuilder
+                .newBuilder("cz.atlascon.record").addField(Schema.STRING, name)
+                .setIdSchema(idSchema).build();
+        GraphQLSchema graphQLSchema = generator.generateSchema(schema);
+
+        GraphQLFieldDefinition record = graphQLSchema.getQueryType().getFieldDefinition("record");
+        List<GraphQLArgument> arguments = record.getArguments();
+        Assert.assertTrue(arguments.size() == 1);
+        GraphQLArgument graphQLArgument = arguments.get(0);
+
+        GraphQLInputType type = graphQLArgument.getType();
+        Assert.assertTrue(type instanceof GraphQLList);
+        GraphQLType wrappedType = ((GraphQLList) type).getWrappedType();
+        Assert.assertEquals("String", wrappedType.getName());
     }
 
 }
