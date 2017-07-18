@@ -2,10 +2,7 @@ import com.google.common.collect.Lists;
 import cz.atlascon.travny.graphql.GraphQLGenerator;
 import cz.atlascon.travny.graphql.GraphQLGeneratorImpl;
 import cz.atlascon.travny.parser.Parser;
-import cz.atlascon.travny.schemas.EnumSchema;
-import cz.atlascon.travny.schemas.ListSchema;
-import cz.atlascon.travny.schemas.RecordSchema;
-import cz.atlascon.travny.schemas.Schema;
+import cz.atlascon.travny.schemas.*;
 import cz.atlascon.travny.schemas.builders.RecordSchemaBuilder;
 import cz.atlascon.travny.types.EnumConstantImpl;
 import graphql.AssertException;
@@ -339,6 +336,36 @@ public class TestGraphQLGeneratorImpl {
         Assert.assertTrue(type instanceof GraphQLList);
         GraphQLType wrappedType = ((GraphQLList) type).getWrappedType();
         Assert.assertEquals("String", wrappedType.getName());
+    }
+
+    @Test
+    public void shouldProduceValidInputObject() {
+        RecordSchema inputObject = RecordSchemaBuilder.newBuilder("object").addField(Schema.DOUBLE, "somefield").build();
+
+        String name = "name";
+        RecordSchema idSchema = RecordSchemaBuilder.newBuilder("cz.atlascon.id")
+                .addField(ListSchema.of(inputObject), name).build();
+        RecordSchema schema = RecordSchemaBuilder
+                .newBuilder("cz.atlascon.record").addField(Schema.STRING, name)
+                .setIdSchema(idSchema).build();
+        GraphQLSchema graphQLSchema = generator.generateSchema(schema);
+        //TODO checks
+    }
+
+
+    @Test
+    public void shouldProduceValidInputMap() {
+        RecordSchema keySchema = RecordSchemaBuilder.newBuilder("keyObject").addField(Schema.STRING, "stringField").build();
+        RecordSchema valSchema = RecordSchemaBuilder.newBuilder("valObject").addField(Schema.DOUBLE, "doubleField").build();
+
+        String name = "name";
+        RecordSchema idSchema = RecordSchemaBuilder.newBuilder("cz.atlascon.id")
+                .addField(MapSchema.of(keySchema, valSchema), name).build();
+        RecordSchema schema = RecordSchemaBuilder
+                .newBuilder("cz.atlascon.record").addField(Schema.STRING, name)
+                .setIdSchema(idSchema).build();
+        GraphQLSchema graphQLSchema = generator.generateSchema(schema);
+        // TODO checks
     }
 
 }

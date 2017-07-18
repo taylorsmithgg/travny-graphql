@@ -1,5 +1,6 @@
 package cz.atlascon.travny.graphql.output;
 
+import cz.atlascon.travny.graphql.common.MapEntry;
 import cz.atlascon.travny.parser.SchemaNameUtils;
 import cz.atlascon.travny.records.IdRecord;
 import cz.atlascon.travny.records.Record;
@@ -66,24 +67,6 @@ public class ResolvingFieldDataFetcherFactory implements TravnyFieldDataFetcherF
                 return convertIfMap(field, val);
             }
         };
-    }
-
-    public static final class MapEntry {
-        private final Object key;
-        private final Object val;
-
-        public MapEntry(Object key, Object val) {
-            this.key = key;
-            this.val = val;
-        }
-
-        public Object getKey() {
-            return key;
-        }
-
-        public Object getVal() {
-            return val;
-        }
     }
 
     private Object convertIfMap(Field field, Object val) {
