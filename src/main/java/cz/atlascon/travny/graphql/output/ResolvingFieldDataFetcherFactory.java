@@ -1,6 +1,6 @@
 package cz.atlascon.travny.graphql.output;
 
-import cz.atlascon.travny.graphql.common.MapEntry;
+import cz.atlascon.travny.graphql.domain.MapEntry;
 import cz.atlascon.travny.parser.SchemaNameUtils;
 import cz.atlascon.travny.records.IdRecord;
 import cz.atlascon.travny.records.Record;
