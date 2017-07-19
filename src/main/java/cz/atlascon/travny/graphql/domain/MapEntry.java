@@ -4,6 +4,9 @@ package cz.atlascon.travny.graphql.domain;
  * Created by tomas on 18.7.17.
  */
 public final class MapEntry {
+    public static final String KEY_NAME = "key";
+    public static final String VALUE_NAME = "val";
+
     private final Object key;
     private final Object val;
 
