@@ -12,6 +12,8 @@ import graphql.schema.DataFetcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
@@ -34,7 +36,13 @@ public class ResolvingFieldDataFetcherFactory implements TravnyFieldDataFetcherF
         return environment -> {
             Object object = environment.getSource();
             if (object == null) return null;
-            Record rec = (Record) object;
+            Record rec;
+            if(object instanceof List){
+                rec = (Record) ((List) object).get(0);
+            } else {
+                rec = (Record) object;
+            }
+
             Field requestedField = rec.getSchema().getField(field.getName());
             // requested field not found in object, object is ID and requested field is present in actual object
             // --> load object by ID
