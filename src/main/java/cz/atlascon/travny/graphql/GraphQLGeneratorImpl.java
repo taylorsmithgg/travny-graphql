@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import cz.atlascon.travny.graphql.common.Common;
 import cz.atlascon.travny.graphql.convertor.ClassConvertor;
 import cz.atlascon.travny.graphql.convertor.ClassConvertorImpl;
 import cz.atlascon.travny.graphql.domain.SchemaAddinfo;
@@ -76,7 +77,7 @@ public class GraphQLGeneratorImpl implements GraphQLGenerator {
         List<GraphQLFieldDefinition> fieldDefinitions = Lists.newArrayList();
         for (SchemaAddinfo addinfo : recordSchemas) {
             // get name of class without packages
-            fieldDefinitions.add(createRootField(addinfo.getRecordSchema(), dataFetcher, addinfo.getFieldName()));
+            fieldDefinitions.add(createRootField(addinfo.getRecordSchema(), dataFetcher, Common.convertToName(addinfo.getRecordSchema().getName())));
         }
 
         return fieldDefinitions;

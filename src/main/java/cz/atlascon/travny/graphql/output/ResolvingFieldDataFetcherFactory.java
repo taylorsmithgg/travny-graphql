@@ -1,12 +1,16 @@
 package cz.atlascon.travny.graphql.output;
 
+import com.google.common.io.BaseEncoding;
+import com.google.common.primitives.Bytes;
 import cz.atlascon.travny.graphql.domain.MapEntry;
 import cz.atlascon.travny.parser.SchemaNameUtils;
 import cz.atlascon.travny.records.IdRecord;
 import cz.atlascon.travny.records.Record;
 import cz.atlascon.travny.schemas.Field;
 import cz.atlascon.travny.schemas.RecordSchema;
+import cz.atlascon.travny.schemas.Schema;
 import cz.atlascon.travny.schemas.Schemas;
+import cz.atlascon.travny.types.BytesArray;
 import cz.atlascon.travny.types.Type;
 import graphql.schema.DataFetcher;
 import org.slf4j.Logger;
@@ -25,9 +29,9 @@ import java.util.stream.Collectors;
 public class ResolvingFieldDataFetcherFactory implements TravnyFieldDataFetcherFactory {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ResolvingFieldDataFetcherFactory.class);
-    private final Function<IdRecord, Record> retrieveFc;
+    private final Function<Record, Record> retrieveFc;
 
-    public ResolvingFieldDataFetcherFactory(Function<IdRecord, Record> retrieveFc) {
+    public ResolvingFieldDataFetcherFactory(Function<Record, Record> retrieveFc) {
         this.retrieveFc = retrieveFc;
     }
 
@@ -49,23 +53,15 @@ public class ResolvingFieldDataFetcherFactory implements TravnyFieldDataFetcherF
             if (requestedField == null && SchemaNameUtils.isIdSchema(rec.getSchema().getName())) {
                 String recName = SchemaNameUtils.getRecordForId(rec.getSchema().getName());
                 try {
-                    Class<?> recClass = Class.forName(recName);
-                    RecordSchema recSchema = (RecordSchema) Schemas.getSchema(recClass);
-                    Field recField = recSchema.getField(field.getOrd());
-                    if (recField != null) {
-                        Record fullRecord = retrieveFc.apply((IdRecord) rec);
-                        if (fullRecord == null) {
-                            return null;
-                        }
-                        Object val = fullRecord.get(field.getOrd());
-                        if (val == null) {
-                            return null;
-                        }
-                        return convertIfMap(field, val);
-                    } else {
-                        LOGGER.warn("Field " + field.getName() + " not found in object schema " + recName);
+                    Record fullRecord = retrieveFc.apply(rec);
+                    if (fullRecord == null) {
                         return null;
                     }
+                    Object val = fullRecord.get(field.getOrd());
+                    if (val == null) {
+                        return null;
+                    }
+                    return convertIfMap(field, val);
                 } catch (Exception e) {
                     LOGGER.error("Exception getting " + recName, e);
                     return null;
@@ -81,7 +77,10 @@ public class ResolvingFieldDataFetcherFactory implements TravnyFieldDataFetcherF
         if (field.getSchema().getType() == Type.MAP) {
             Set<Map.Entry> set = ((Map) val).entrySet();
             return set.stream().map(e -> new MapEntry(e.getKey(), e.getValue())).collect(Collectors.toList());
-        } else {
+        } else if(field.getSchema().getType() == Type.BYTES) {
+            return BaseEncoding.base16().lowerCase().encode(((BytesArray)val).get());
+        }
+        else {
             return val;
         }
     }

@@ -57,10 +57,7 @@ public class ClassConvertorImpl<E extends Enum> implements ClassConvertor {
         if (schema.getType() == Type.ENUM) {
             return createEnum(schema);
         } else if (schema.getType() == Type.BYTES) {
-            return GraphQLByte;
-        } else if (schema.getType() == Type.MAP) {
-            // TODO implement map
-            return GraphQLByte;
+            return GraphQLString;
         } else {
             return getByClass(schema.getType().getJavaClass());
         }

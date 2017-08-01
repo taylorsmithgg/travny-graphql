@@ -171,7 +171,7 @@ public class TestGraphQLGeneratorImpl {
 
         GraphQLObjectType queryType = graphQLSchema.getQueryType();
         Assert.assertEquals(1, queryType.getFieldDefinitions().size());
-        GraphQLFieldDefinition rootField = queryType.getFieldDefinition(SCHEMA_W_ID.toLowerCase());
+        GraphQLFieldDefinition rootField = queryType.getFieldDefinition(SCHEMA_W_ID);
 
         Assert.assertEquals(1, rootField.getArguments().size());
         Assert.assertEquals(GraphQLInt, rootField.getArgument(ID_INT).getType());
@@ -320,14 +320,14 @@ public class TestGraphQLGeneratorImpl {
     @Test
     public void shouldProduceValidInputList() {
         String name = "name";
-        RecordSchema idSchema = RecordSchemaBuilder.newBuilder("cz.atlascon.id")
+        RecordSchema idSchema = RecordSchemaBuilder.newBuilder("cz_atlascon_id")
                 .addField(ListSchema.of(Schema.STRING), name).build();
         RecordSchema schema = RecordSchemaBuilder
-                .newBuilder("cz.atlascon.record").addField(Schema.STRING, name)
+                .newBuilder("cz_atlascon_record").addField(Schema.STRING, name)
                 .setIdSchema(idSchema).build();
         GraphQLSchema graphQLSchema = generator.generateSchema(schema);
 
-        GraphQLFieldDefinition record = graphQLSchema.getQueryType().getFieldDefinition("record");
+        GraphQLFieldDefinition record = graphQLSchema.getQueryType().getFieldDefinition("cz_atlascon_record");
         List<GraphQLArgument> arguments = record.getArguments();
         Assert.assertTrue(arguments.size() == 1);
         GraphQLArgument graphQLArgument = arguments.get(0);
