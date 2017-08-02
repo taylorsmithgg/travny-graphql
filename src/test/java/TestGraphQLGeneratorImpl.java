@@ -100,7 +100,7 @@ public class TestGraphQLGeneratorImpl {
 
     @Ignore
     @Test
-    public void convertingEnum() {
+    public void convertingEnum(){
         RecordSchema schema2 = RecordSchema.newBuilder("Schema2")
                 .addField(Schema.INT, "someInt")
                 .addField(new EnumSchema("someName", Lists.newArrayList(new EnumConstantImpl(0, "ano"), new EnumConstantImpl(0, "ne"))), "enum")
@@ -171,7 +171,7 @@ public class TestGraphQLGeneratorImpl {
 
         GraphQLObjectType queryType = graphQLSchema.getQueryType();
         Assert.assertEquals(1, queryType.getFieldDefinitions().size());
-        GraphQLFieldDefinition rootField = queryType.getFieldDefinition(SCHEMA_W_ID);
+        GraphQLFieldDefinition rootField = queryType.getFieldDefinition(SCHEMA_W_ID.toLowerCase());
 
         Assert.assertEquals(1, rootField.getArguments().size());
         Assert.assertEquals(GraphQLInt, rootField.getArgument(ID_INT).getType());

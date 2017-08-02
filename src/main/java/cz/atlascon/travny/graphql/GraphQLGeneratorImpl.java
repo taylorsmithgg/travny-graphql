@@ -77,7 +77,7 @@ public class GraphQLGeneratorImpl implements GraphQLGenerator {
         List<GraphQLFieldDefinition> fieldDefinitions = Lists.newArrayList();
         for (SchemaAddinfo addinfo : recordSchemas) {
             // get name of class without packages
-            fieldDefinitions.add(createRootField(addinfo.getRecordSchema(), dataFetcher, Common.convertToName(addinfo.getRecordSchema().getName())));
+            fieldDefinitions.add(createRootField(addinfo.getRecordSchema(), dataFetcher, addinfo.getFieldName()));
         }
 
         return fieldDefinitions;

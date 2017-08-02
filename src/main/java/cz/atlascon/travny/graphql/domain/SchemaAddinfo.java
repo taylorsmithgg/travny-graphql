@@ -18,7 +18,7 @@ public class SchemaAddinfo {
     public SchemaAddinfo(RecordSchema recordSchema) {
         Preconditions.checkNotNull(recordSchema);
         this.recordSchema = recordSchema;
-        this.fieldName = Common.createRootFieldName(recordSchema);
+        this.fieldName = Common.convertToName(recordSchema.getName());
     }
 
     public RecordSchema getRecordSchema() {
