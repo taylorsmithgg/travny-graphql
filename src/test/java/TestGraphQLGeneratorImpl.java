@@ -171,7 +171,7 @@ public class TestGraphQLGeneratorImpl {
 
         GraphQLObjectType queryType = graphQLSchema.getQueryType();
         Assert.assertEquals(1, queryType.getFieldDefinitions().size());
-        GraphQLFieldDefinition rootField = queryType.getFieldDefinition(SCHEMA_W_ID.toLowerCase());
+        GraphQLFieldDefinition rootField = queryType.getFieldDefinition(SCHEMA_W_ID);
 
         Assert.assertEquals(1, rootField.getArguments().size());
         Assert.assertEquals(GraphQLInt, rootField.getArgument(ID_INT).getType());
