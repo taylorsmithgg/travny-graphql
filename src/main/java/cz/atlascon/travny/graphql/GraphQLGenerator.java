@@ -28,13 +28,13 @@ public interface GraphQLGenerator {
 
     default GraphQLSchema generateSchema(List<RecordSchema> recordSchemas) {
         List<SchemaAddinfo> collect = recordSchemas.stream().map(recordSchema ->
-                new SchemaAddinfo(recordSchema, Common.createRootFieldName(recordSchema))).collect(Collectors.toList());
+                new SchemaAddinfo(recordSchema)).collect(Collectors.toList());
         return generateSchema(collect, null);
     }
 
     default GraphQLSchema generateSchema(RecordSchema recordSchema) {
         return generateSchema(Lists.newArrayList(
-                new SchemaAddinfo(recordSchema, Common.createRootFieldName(recordSchema))),
+                new SchemaAddinfo(recordSchema)),
                 null);
     }
 
