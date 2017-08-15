@@ -78,17 +78,9 @@ public class ClassConvertorImpl<E extends Enum> implements ClassConvertor {
         String eName = convertToName(((EnumSchema) schema).getName());
         GraphQLEnumType.Builder enumQL = GraphQLEnumType.newEnum().name(eName);
 
-        Class<E> aClass = null;
-        try {
-            aClass = (Class<E>) Class.forName(((EnumSchema) schema).getName());
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-        E[] enumConstants = aClass.getEnumConstants();
-
         for (EnumConstant constant : constants) {
             String constantValue = constant.getConstant();
-            enumQL.value(constant.getConstant(), findValue(constantValue, enumConstants), constant.getConstant());
+            enumQL.value(constant.getConstant(), constantValue);
         }
         enumMap.putIfAbsent(eName, enumQL.build());
 
