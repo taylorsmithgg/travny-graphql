@@ -1,22 +1,17 @@
 package cz.atlascon.travny.graphql.output;
 
 import com.google.common.io.BaseEncoding;
-import com.google.common.primitives.Bytes;
 import cz.atlascon.travny.graphql.domain.MapEntry;
 import cz.atlascon.travny.parser.SchemaNameUtils;
-import cz.atlascon.travny.records.IdRecord;
 import cz.atlascon.travny.records.Record;
 import cz.atlascon.travny.schemas.Field;
-import cz.atlascon.travny.schemas.RecordSchema;
-import cz.atlascon.travny.schemas.Schema;
-import cz.atlascon.travny.schemas.Schemas;
 import cz.atlascon.travny.types.BytesArray;
+import cz.atlascon.travny.types.EnumConstant;
 import cz.atlascon.travny.types.Type;
 import graphql.schema.DataFetcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -68,6 +63,11 @@ public class ResolvingFieldDataFetcherFactory implements TravnyFieldDataFetcherF
                 }
             } else {
                 Object val = rec.get(field.getName());
+
+                if(EnumConstant.class.isAssignableFrom(val.getClass())){
+                    val = ((EnumConstant) val).getConstant();
+                }
+
                 return convertIfMap(field, val);
             }
         };
