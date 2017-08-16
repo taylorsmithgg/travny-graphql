@@ -64,7 +64,7 @@ public class ResolvingFieldDataFetcherFactory implements TravnyFieldDataFetcherF
             } else {
                 Object val = rec.get(field.getName());
 
-                if(EnumConstant.class.isAssignableFrom(val.getClass())){
+                if(val != null && EnumConstant.class.isAssignableFrom(val.getClass())){
                     val = ((EnumConstant) val).getConstant();
                 }
 
