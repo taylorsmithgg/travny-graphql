@@ -79,20 +79,10 @@ public class ClassConvertorImpl<E extends Enum> implements ClassConvertor {
         GraphQLEnumType.Builder enumQL = GraphQLEnumType.newEnum().name(eName);
 
         for (EnumConstant constant : constants) {
-            String constantValue = constant.getConstant();
-            enumQL.value(constant.getConstant(), constantValue);
+            enumQL.value(constant.getConstant(), constant);
         }
         enumMap.putIfAbsent(eName, enumQL.build());
 
         return enumMap.get(eName);
-    }
-
-    private Object findValue(String constant, E[] enumConstants) {
-        for (int i = 0; i < enumConstants.length; i++) {
-            if (enumConstants[i].name().equals(constant)) {
-                return enumConstants[i];
-            }
-        }
-        throw new AssertException("Value: " + constant + " not found in given constants!");
     }
 }

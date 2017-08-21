@@ -6,7 +6,6 @@ import cz.atlascon.travny.parser.SchemaNameUtils;
 import cz.atlascon.travny.records.Record;
 import cz.atlascon.travny.schemas.Field;
 import cz.atlascon.travny.types.BytesArray;
-import cz.atlascon.travny.types.EnumConstant;
 import cz.atlascon.travny.types.Type;
 import graphql.schema.DataFetcher;
 import org.slf4j.Logger;
@@ -63,11 +62,6 @@ public class ResolvingFieldDataFetcherFactory implements TravnyFieldDataFetcherF
                 }
             } else {
                 Object val = rec.get(field.getName());
-
-                if(val != null && EnumConstant.class.isAssignableFrom(val.getClass())){
-                    val = ((EnumConstant) val).getConstant();
-                }
-
                 return convertIfMap(field, val);
             }
         };
