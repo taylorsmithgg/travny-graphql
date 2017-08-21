@@ -68,7 +68,7 @@ public class ResolvingFieldDataFetcherFactory implements TravnyFieldDataFetcherF
 
                 if (val != null && val instanceof Enum) {
                     val = new EnumConstantImpl(((EnumConstant) val).getOrd(), ((EnumConstant) val).getConstant());
-                } else if (val instanceof List && ((List) val).get(0) instanceof Enum) {
+                } else if (val instanceof List && !((List) val).isEmpty() && ((List) val).get(0) instanceof Enum) {
                     List<EnumConstant> result = Lists.newArrayList();
                     ((List) val).forEach(v -> result.add(new EnumConstantImpl(((EnumConstant) v).getOrd(), ((EnumConstant) v).getConstant())));
                     val = result;
