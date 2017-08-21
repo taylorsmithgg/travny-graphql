@@ -1,11 +1,14 @@
 package cz.atlascon.travny.graphql.output;
 
+import com.google.common.collect.Lists;
 import com.google.common.io.BaseEncoding;
 import cz.atlascon.travny.graphql.domain.MapEntry;
 import cz.atlascon.travny.parser.SchemaNameUtils;
 import cz.atlascon.travny.records.Record;
 import cz.atlascon.travny.schemas.Field;
 import cz.atlascon.travny.types.BytesArray;
+import cz.atlascon.travny.types.EnumConstant;
+import cz.atlascon.travny.types.EnumConstantImpl;
 import cz.atlascon.travny.types.Type;
 import graphql.schema.DataFetcher;
 import org.slf4j.Logger;
@@ -35,7 +38,7 @@ public class ResolvingFieldDataFetcherFactory implements TravnyFieldDataFetcherF
             Object object = environment.getSource();
             if (object == null) return null;
             Record rec;
-            if(object instanceof List){
+            if (object instanceof List) {
                 rec = (Record) ((List) object).get(0);
             } else {
                 rec = (Record) object;
@@ -62,6 +65,15 @@ public class ResolvingFieldDataFetcherFactory implements TravnyFieldDataFetcherF
                 }
             } else {
                 Object val = rec.get(field.getName());
+
+                if (val != null && val instanceof Enum) {
+                    val = new EnumConstantImpl(((EnumConstant) val).getOrd(), ((EnumConstant) val).getConstant());
+                } else if (val instanceof List && ((List) val).get(0) instanceof Enum) {
+                    List<EnumConstant> result = Lists.newArrayList();
+                    ((List) val).forEach(v -> result.add(new EnumConstantImpl(((EnumConstant) v).getOrd(), ((EnumConstant) v).getConstant())));
+                    val = result;
+                }
+
                 return convertIfMap(field, val);
             }
         };
@@ -71,10 +83,9 @@ public class ResolvingFieldDataFetcherFactory implements TravnyFieldDataFetcherF
         if (field.getSchema().getType() == Type.MAP) {
             Set<Map.Entry> set = ((Map) val).entrySet();
             return set.stream().map(e -> new MapEntry(e.getKey(), e.getValue())).collect(Collectors.toList());
-        } else if(field.getSchema().getType() == Type.BYTES) {
-            return BaseEncoding.base16().lowerCase().encode(((BytesArray)val).get());
-        }
-        else {
+        } else if (field.getSchema().getType() == Type.BYTES) {
+            return BaseEncoding.base16().lowerCase().encode(((BytesArray) val).get());
+        } else {
             return val;
         }
     }
