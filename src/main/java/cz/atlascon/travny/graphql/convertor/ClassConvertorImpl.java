@@ -79,7 +79,9 @@ public class ClassConvertorImpl<E extends Enum> implements ClassConvertor {
         GraphQLEnumType.Builder enumQL = GraphQLEnumType.newEnum().name(eName);
 
         for (EnumConstant constant : constants) {
-            enumQL.value(constant.getConstant(), constant);
+            if(!constant.isRemoved()){
+                enumQL.value(constant.getConstant(), constant);
+            }
         }
         enumMap.putIfAbsent(eName, enumQL.build());
 
