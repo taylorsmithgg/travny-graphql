@@ -100,7 +100,7 @@ public class TestGraphQLGeneratorImpl {
 
     @Ignore
     @Test
-    public void convertingEnum(){
+    public void convertingEnum() {
         RecordSchema schema2 = RecordSchema.newBuilder("Schema2")
                 .addField(Schema.INT, "someInt")
                 .addField(new EnumSchema("someName", Lists.newArrayList(new EnumConstantImpl(0, "ano"), new EnumConstantImpl(0, "ne"))), "enum")
@@ -368,4 +368,26 @@ public class TestGraphQLGeneratorImpl {
         // TODO checks
     }
 
+
+    @Test
+    public void sameObjectInputOutput() {
+        RecordSchema date = RecordSchemaBuilder
+                .newBuilder("cz.atlascon.Date")
+                .addField(Schema.INT, "day")
+                .addField(Schema.INT, "month")
+                .addField(Schema.INT, "year")
+                .build();
+
+        RecordSchema input = RecordSchemaBuilder
+                .newBuilder("input")
+                .addField(date, "inputDate")
+                .build();
+        RecordSchema build = RecordSchemaBuilder
+                .newBuilder("together")
+                .setIdSchema(input)
+                .addField(ListSchema.of(date), "list")
+                .build();
+
+        GraphQLSchema graphQLSchema = generator.generateSchema(build);
+    }
 }
