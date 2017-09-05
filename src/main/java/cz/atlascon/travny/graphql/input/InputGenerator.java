@@ -19,6 +19,8 @@ import static cz.atlascon.travny.graphql.common.Common.convertToName;
 public class InputGenerator {
     private final ConcurrentMap<String, GraphQLInputObjectType> inputMap = Maps.newConcurrentMap();
     private final ClassConvertor convertor;
+    private static final String SUFFIX = "_input";
+    private static final String DESCRIPTION = "this is same as original but with suffix '_input'. Original schema: ";
 
     public InputGenerator(ClassConvertor classConvertor) {
         this.convertor = classConvertor;
@@ -76,7 +78,7 @@ public class InputGenerator {
     }
 
     private GraphQLInputObjectType createRecordType(RecordSchema recordSchema) {
-        String className = convertToName(recordSchema.getName());
+        String className = convertToName(recordSchema.getName()) + SUFFIX;
         GraphQLInputObjectType existing = inputMap.get(className);
         if (existing != null) {
             return existing;
@@ -96,6 +98,7 @@ public class InputGenerator {
                     .newInputObject()
                     .fields(fieldDefs)
                     .name(className)
+                    .description(DESCRIPTION + convertToName(recordSchema.getName()))
                     .build();
             inputMap.put(className, objectType);
             return objectType;

@@ -41,7 +41,8 @@ public class ClassConvertorImpl<E extends Enum> implements ClassConvertor {
         } else if (aClass.equals(Character.class)) {
             return GraphQLChar;
         } else if (aClass.equals(Float.class) || aClass.equals(Double.class)) {
-            //Note: The Float type in GraphQL is equivalent to Double in Java. (double precision IEEE 754)
+            // copied from graphQL documentation
+            // Note: The Float type in GraphQL is equivalent to Double in Java. (double precision IEEE 754)
             return GraphQLFloat;
         }
         throw new AssertException("Not a valid class type: " + aClass.getName());
