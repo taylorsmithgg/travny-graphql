@@ -149,7 +149,7 @@ public class OutputGenerator {
                 // if field is ID self reference -> point to itself
                 String recName = SchemaNameUtils.getRecordForId(fieldSchemaName);
                 if (recName.equals(recordSchema.getName())) {
-                    return createField(field.getName(), new GraphQLTypeReference(convertToName(recName)), null);
+                    return createField(field.getName(), new GraphQLTypeReference(convertToName(recName)), dataFetcher.create(field));
                 }
             }
         }
