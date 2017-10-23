@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.concurrent.ConcurrentMap;
 
 import static cz.atlascon.travny.graphql.common.Common.convertToName;
+import static cz.atlascon.travny.graphql.common.Common.getName;
 
 /**
  * Created by tomas on 25.6.17.

@@ -82,11 +82,26 @@ public class ResolvingFieldDataFetcherFactory implements TravnyFieldDataFetcherF
     private Object convertIfMap(Field field, Object val) {
         if (field.getSchema().getType() == Type.MAP) {
             Set<Map.Entry> set = ((Map) val).entrySet();
-            return set.stream().map(e -> new MapEntry(e.getKey(), e.getValue())).collect(Collectors.toList());
+            return convertToEntry(set);
         } else if (field.getSchema().getType() == Type.BYTES) {
             return BaseEncoding.base16().lowerCase().encode(((BytesArray) val).get());
         } else {
             return val;
         }
     }
+
+    private List<MapEntry> convertToEntry(Set<Map.Entry> set) {
+        List<MapEntry> mapEntryList = Lists.newArrayList();
+
+        for (Map.Entry entry : set) {
+            if(entry.getValue() instanceof Map){
+                List c = convertToEntry(((Map) entry.getValue()).entrySet());
+                mapEntryList.add(new MapEntry(entry.getKey(), c));
+            } else {
+                mapEntryList.add(new MapEntry(entry.getKey(), entry.getValue()));
+            }
+        }
+        return mapEntryList;
+    }
+
 }
