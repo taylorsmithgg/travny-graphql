@@ -3,6 +3,7 @@ package cz.atlascon.travny.graphql.output;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import cz.atlascon.travny.graphql.common.Common;
 import cz.atlascon.travny.graphql.convertor.ClassConvertor;
 import cz.atlascon.travny.parser.SchemaNameUtils;
 import cz.atlascon.travny.schemas.*;
@@ -16,6 +17,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.function.Function;
 
 import static cz.atlascon.travny.graphql.common.Common.convertToName;
+import static cz.atlascon.travny.graphql.common.Common.getName;
 
 /**
  * Created by tomas on 25.6.17.
@@ -78,7 +80,7 @@ public class OutputGenerator {
             MapSchema mapSchema = (MapSchema) schema;
             GraphQLOutputType key = createType(mapSchema.getKeySchema());
             GraphQLOutputType val = createType(mapSchema.getValueSchema());
-            String entryName = "map_entry_" + key.getName() + "_" + val.getName();
+            String entryName = "map_entry_" + getName(key) + "_" + getName(val);
             GraphQLOutputType entryType = typeMap.computeIfAbsent(entryName, n -> {
                 GraphQLFieldDefinition keyField = createField("key", key, null);
                 GraphQLFieldDefinition valField = createField("val", val, null);

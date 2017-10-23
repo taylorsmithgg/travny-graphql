@@ -390,4 +390,18 @@ public class TestGraphQLGeneratorImpl {
 
         GraphQLSchema graphQLSchema = generator.generateSchema(build);
     }
+
+    @Test
+    public void shouldProduceValidNEstedMaps(){
+        // map<string, map<string, integer>>
+        RecordSchema build = RecordSchemaBuilder.newBuilder("cz.SomeName")
+                .addField(
+                        MapSchema.of(Schema.STRING,
+                                MapSchema.of(Schema.STRING, Schema.INT)), "fieldName").build();
+        GraphQLSchema graphQLSchema = generator.generateSchema(build);
+
+        GraphQLObjectType queryType = graphQLSchema.getQueryType();
+
+
+    }
 }

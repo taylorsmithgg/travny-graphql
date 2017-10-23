@@ -2,6 +2,8 @@ package cz.atlascon.travny.graphql.common;
 
 import com.google.common.base.Splitter;
 import cz.atlascon.travny.schemas.RecordSchema;
+import graphql.schema.GraphQLList;
+import graphql.schema.GraphQLOutputType;
 
 import java.util.List;
 
@@ -26,4 +28,12 @@ public class Common {
         List<String> strings = Splitter.on('.').splitToList(recordSchema.getName());
         return strings.get(strings.size() - 1).toLowerCase();
     }
+
+    public static String getName(GraphQLOutputType outputType){
+        if(outputType instanceof GraphQLList){
+            return ((GraphQLList) outputType).getWrappedType().getName();
+        }
+        return outputType.getName();
+    }
+
 }
