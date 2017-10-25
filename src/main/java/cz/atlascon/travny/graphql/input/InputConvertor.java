@@ -17,13 +17,30 @@ public class InputConvertor {
     private static final Predicate<Type> IS_SIMPLE = type -> type == Type.INT || type == Type.LONG
             || type == Type.DOUBLE || type == Type.FLOAT || type == Type.BOOLEAN || type == Type.STRING;
 
-
+    /**
+     * WARNING
+     * WARNING its supposed to use only at schemas which are converted to java class
+     * @param idSchema
+     * @param environment
+     * @param <R>
+     * @return
+     * @throws Exception
+     */
     public <R extends CustomRecord> R convert(RecordSchema idSchema, DataFetchingEnvironment environment) throws Exception {
         Map<String, Object> arguments = environment.getArguments();
         CustomRecord customRecord = convertRecord(idSchema, arguments);
         return (R) customRecord;
     }
 
+    /**
+     * WARNING
+     * WARNING its supposed to use only at schemas which are converted to java class
+     * @param aClass
+     * @param environment
+     * @param <R>
+     * @return
+     * @throws Exception
+     */
     public <R extends CustomRecord> R convert(Class<R> aClass, DataFetchingEnvironment environment) throws Exception{
         RecordSchema schema = (RecordSchema) Schemas.getSchema(aClass);
         return (R) convert(schema, environment);
