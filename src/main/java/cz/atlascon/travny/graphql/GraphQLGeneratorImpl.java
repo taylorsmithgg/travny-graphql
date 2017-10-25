@@ -4,7 +4,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import cz.atlascon.travny.graphql.common.Common;
 import cz.atlascon.travny.graphql.convertor.ClassConvertor;
 import cz.atlascon.travny.graphql.convertor.ClassConvertorImpl;
 import cz.atlascon.travny.graphql.domain.SchemaAddinfo;
@@ -16,9 +15,7 @@ import graphql.schema.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.lang.reflect.TypeVariable;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -35,10 +32,10 @@ public class GraphQLGeneratorImpl implements GraphQLGenerator {
     private DataFetcher dataFetcher;
     private List<TravnyFetcher> dataFetchers;
 
-    public GraphQLGeneratorImpl(DataFetcher defaultFetcher, TravnyFieldDataFetcherFactory dataFetcherFactory, List<TravnyFetcher> fetchers) {
+    public GraphQLGeneratorImpl(DataFetcher<Collection> defaultFetcher, TravnyFieldDataFetcherFactory dataFetcherFactory, List<TravnyFetcher> concreteFetchers) {
         Preconditions.checkNotNull(defaultFetcher);
         this.dataFetcher = defaultFetcher;
-        this.dataFetchers = fetchers;
+        this.dataFetchers = concreteFetchers;
         ClassConvertor classConvertor = new ClassConvertorImpl();
         inputGenerator = new InputGenerator(classConvertor);
         outputGenerator = new OutputGenerator(classConvertor, dataFetcherFactory);
@@ -83,7 +80,7 @@ public class GraphQLGeneratorImpl implements GraphQLGenerator {
         for (SchemaAddinfo addinfo : recordSchemas) {
             // get name of class without packages
             RecordSchema recordSchema = addinfo.getRecordSchema();
-            fieldDefinitions.add(createRootField(recordSchema, chooseFetcher(dataFetcher, dataFetchers, recordSchema), addinfo.getFieldName()));
+            fieldDefinitions.add(createRootField(addinfo, chooseFetcher(dataFetcher, dataFetchers, recordSchema)));
         }
 
         return fieldDefinitions;
@@ -104,16 +101,16 @@ public class GraphQLGeneratorImpl implements GraphQLGenerator {
         return defaultFetcher;
     }
 
-    private GraphQLFieldDefinition createRootField(RecordSchema schema, DataFetcher dataFetcher, String rootFieldName) {
-        Preconditions.checkNotNull(schema, "schema cannot be null!");
-        GraphQLOutputType outputType = outputGenerator.createRootField(schema);
+    private GraphQLFieldDefinition createRootField(SchemaAddinfo addinfo, DataFetcher dataFetcher) {
+        Preconditions.checkNotNull(addinfo, "schema cannot be null!");
+        GraphQLOutputType outputType = outputGenerator.createRootField(addinfo.getRecordSchema());
 
         return GraphQLFieldDefinition.newFieldDefinition()
                 .type(GraphQLList.list(outputType))
-                .argument(argumentsPerRootField(schema.getIdSchema()))
-                .name(rootFieldName)
+                .argument(argumentsPerRootField(addinfo.getIdSchema()))
+                .name(addinfo.getFieldName())
                 .dataFetcher(dataFetcher)
-                .description("Generated graphQL schema for class: " + schema.getName())
+                .description("Generated graphQL schema for class: " + addinfo.getRecordSchema().getName())
                 .build();
     }
 
