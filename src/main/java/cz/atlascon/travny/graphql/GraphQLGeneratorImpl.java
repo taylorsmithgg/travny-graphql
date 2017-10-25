@@ -16,6 +16,9 @@ import graphql.schema.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -30,10 +33,12 @@ public class GraphQLGeneratorImpl implements GraphQLGenerator {
     private final InputGenerator inputGenerator;
     private final OutputGenerator outputGenerator;
     private DataFetcher dataFetcher;
+    private List<TravnyFetcher> dataFetchers;
 
-    public GraphQLGeneratorImpl(DataFetcher dataFetcher, TravnyFieldDataFetcherFactory dataFetcherFactory) {
-        Preconditions.checkNotNull(dataFetcher);
-        this.dataFetcher = dataFetcher;
+    public GraphQLGeneratorImpl(DataFetcher defaultFetcher, TravnyFieldDataFetcherFactory dataFetcherFactory, List<TravnyFetcher> fetchers) {
+        Preconditions.checkNotNull(defaultFetcher);
+        this.dataFetcher = defaultFetcher;
+        this.dataFetchers = fetchers;
         ClassConvertor classConvertor = new ClassConvertorImpl();
         inputGenerator = new InputGenerator(classConvertor);
         outputGenerator = new OutputGenerator(classConvertor, dataFetcherFactory);
@@ -48,7 +53,7 @@ public class GraphQLGeneratorImpl implements GraphQLGenerator {
 
         outputGenerator.setSchemaSupplier(createSupplier(schemaSupplier, schemas));
         LOGGER.info("Creating types schemas");
-        List<GraphQLFieldDefinition> types = createRootFields(addinfoList, dataFetcher);
+        List<GraphQLFieldDefinition> types = createRootFields(addinfoList, dataFetcher, dataFetchers);
         LOGGER.info("Types schemas created");
         LOGGER.info("Creating root schema");
         GraphQLSchema root = GraphQLSchema.newSchema()
@@ -73,14 +78,30 @@ public class GraphQLGeneratorImpl implements GraphQLGenerator {
         };
     }
 
-    private List<GraphQLFieldDefinition> createRootFields(List<SchemaAddinfo> recordSchemas, DataFetcher dataFetcher) {
+    private List<GraphQLFieldDefinition> createRootFields(List<SchemaAddinfo> recordSchemas, DataFetcher dataFetcher, List<TravnyFetcher> dataFetchers) {
         List<GraphQLFieldDefinition> fieldDefinitions = Lists.newArrayList();
         for (SchemaAddinfo addinfo : recordSchemas) {
             // get name of class without packages
-            fieldDefinitions.add(createRootField(addinfo.getRecordSchema(), dataFetcher, addinfo.getFieldName()));
+            RecordSchema recordSchema = addinfo.getRecordSchema();
+            fieldDefinitions.add(createRootField(recordSchema, chooseFetcher(dataFetcher, dataFetchers, recordSchema), addinfo.getFieldName()));
         }
 
         return fieldDefinitions;
+    }
+
+    private DataFetcher chooseFetcher(DataFetcher defaultFetcher, List<TravnyFetcher> dataFetchers, RecordSchema recordSchema) {
+        if(dataFetchers == null){
+            return defaultFetcher;
+        }
+
+        for (TravnyFetcher fetcher : dataFetchers) {
+            String type = fetcher.getFetchedClass().getName();
+            if(recordSchema.getName().equals(type)){
+                return fetcher;
+            }
+        }
+
+        return defaultFetcher;
     }
 
     private GraphQLFieldDefinition createRootField(RecordSchema schema, DataFetcher dataFetcher, String rootFieldName) {

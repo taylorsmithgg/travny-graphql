@@ -29,7 +29,7 @@ public class TestGraphQLGeneratorImpl {
         public Object get(DataFetchingEnvironment environment) {
             return null;
         }
-    }, field -> null);
+    }, field -> null, null);
 
     private static final String INT_NUMBER_NAME = "intNumber";
     private static final String STRING_NAME = "string";

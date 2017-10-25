@@ -8,6 +8,7 @@ import cz.atlascon.travny.graphql.convertor.ClassConvertor;
 import cz.atlascon.travny.parser.SchemaNameUtils;
 import cz.atlascon.travny.schemas.*;
 import cz.atlascon.travny.types.Type;
+import graphql.language.FieldDefinition;
 import graphql.schema.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
