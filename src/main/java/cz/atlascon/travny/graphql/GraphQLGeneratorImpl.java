@@ -32,7 +32,7 @@ public class GraphQLGeneratorImpl implements GraphQLGenerator {
     private DataFetcher dataFetcher;
     private List<TravnyFetcher> dataFetchers;
 
-    public GraphQLGeneratorImpl(DataFetcher<Collection> defaultFetcher, TravnyFieldDataFetcherFactory dataFetcherFactory, List<TravnyFetcher> concreteFetchers) {
+    public GraphQLGeneratorImpl(DataFetcher<Collection<?>> defaultFetcher, TravnyFieldDataFetcherFactory dataFetcherFactory, List<TravnyFetcher> concreteFetchers) {
         Preconditions.checkNotNull(defaultFetcher);
         this.dataFetcher = defaultFetcher;
         this.dataFetchers = concreteFetchers;
