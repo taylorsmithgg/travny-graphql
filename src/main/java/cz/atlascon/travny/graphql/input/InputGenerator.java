@@ -13,6 +13,7 @@ import java.util.concurrent.ConcurrentMap;
 
 import static cz.atlascon.travny.graphql.common.Common.convertToName;
 import static cz.atlascon.travny.graphql.common.Common.getName;
+import static graphql.Scalars.GraphQLString;
 
 /**
  * Created by tomas on 25.6.17.
@@ -21,6 +22,7 @@ public class InputGenerator {
     private final ConcurrentMap<String, GraphQLInputObjectType> inputMap = Maps.newConcurrentMap();
     private final ClassConvertor convertor;
     private static final String SUFFIX = "_input";
+    public static final String PREDICATE_NAME = "predicate";
     private static final String DESCRIPTION = "this is same as original but with suffix '_input'. Original schema: ";
 
     public InputGenerator(ClassConvertor classConvertor) {
@@ -57,7 +59,7 @@ public class InputGenerator {
         }
     }
 
-    public List<GraphQLArgument> createRootField(RecordSchema idSchema) {
+    public List<GraphQLArgument> createRootField(RecordSchema idSchema, boolean withRootFieldPredicate) {
         List<GraphQLArgument> arguments = Lists.newArrayList();
         if (idSchema == null) {
             return arguments;
@@ -73,6 +75,14 @@ public class InputGenerator {
                         .build();
                 arguments.add(argument);
             }
+        }
+        if(withRootFieldPredicate){
+            GraphQLArgument argument = GraphQLArgument.newArgument()
+                    .name(PREDICATE_NAME)
+                    .type(GraphQLString)
+                    .description("This is input argument for predicate field, its purpose is to supply predice for backend: " + PREDICATE_NAME)
+                    .build();
+            arguments.add(argument);
         }
 
         return arguments;

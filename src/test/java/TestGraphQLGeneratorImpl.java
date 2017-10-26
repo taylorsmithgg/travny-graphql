@@ -48,7 +48,7 @@ public class TestGraphQLGeneratorImpl {
     @Test
     public void shouldProduceSomething() {
         RecordSchema recordSchema = createDummySchema();
-        GraphQLSchema graphQLSchema = generator.generateSchema(recordSchema);
+        GraphQLSchema graphQLSchema = generator.generateSchema(recordSchema, false);
         Assert.assertNotNull(graphQLSchema);
     }
 
@@ -67,7 +67,7 @@ public class TestGraphQLGeneratorImpl {
     @Test
     public void shouldProduceValid() {
         RecordSchema recordSchema = createDummySchema();
-        GraphQLSchema graphQLSchema = generator.generateSchema(recordSchema);
+        GraphQLSchema graphQLSchema = generator.generateSchema(recordSchema, false);
 
         GraphQLObjectType rootType = graphQLSchema.getQueryType();
         List<GraphQLFieldDefinition> fieldDefinitions = rootType.getFieldDefinitions();
@@ -105,7 +105,7 @@ public class TestGraphQLGeneratorImpl {
                 .addField(Schema.INT, "someInt")
                 .addField(new EnumSchema("someName", Lists.newArrayList(new EnumConstantImpl(0, "ano"), new EnumConstantImpl(0, "ne"))), "enum")
                 .build();
-        generator.generateSchema(schema2);
+        generator.generateSchema(schema2, false);
     }
 
     @Test
@@ -115,7 +115,7 @@ public class TestGraphQLGeneratorImpl {
                 .addField(new ListSchema(RecordSchema.INT), LIST_NAME)
                 .build();
         try {
-            generator.generateSchema(schema2);
+            generator.generateSchema(schema2, false);
         } catch (AssertException e) {
             return;
         }
@@ -130,7 +130,7 @@ public class TestGraphQLGeneratorImpl {
                 .addField(new ListSchema(RecordSchema.INT), LIST_NAME)
                 .build();
         try {
-            generator.generateSchema(schema2);
+            generator.generateSchema(schema2, false);
         } catch (AssertException e) {
             return;
         }
@@ -148,7 +148,8 @@ public class TestGraphQLGeneratorImpl {
                 (RecordSchema) parser.getSchema("cz.atlascon.app.LCRrez3"),
                 (RecordSchema) parser.getSchema("cz.atlascon.app.LCRrez2"),
                 (RecordSchema) parser.getSchema("cz.atlascon.app.LCRpredpis2"),
-                (RecordSchema) parser.getSchema("cz.atlascon.app.LCRpredpis"))
+                (RecordSchema) parser.getSchema("cz.atlascon.app.LCRpredpis")),
+                false
         );
     }
 
@@ -167,7 +168,7 @@ public class TestGraphQLGeneratorImpl {
                 .setIdSchema(idSchema)
                 .build();
 
-        GraphQLSchema graphQLSchema = generator.generateSchema(schemaWithId);
+        GraphQLSchema graphQLSchema = generator.generateSchema(schemaWithId, false);
 
         GraphQLObjectType queryType = graphQLSchema.getQueryType();
         Assert.assertEquals(1, queryType.getFieldDefinitions().size());
@@ -196,7 +197,7 @@ public class TestGraphQLGeneratorImpl {
                 .addField(new ListSchema(nestedClass), LIST_NAME)
                 .build();
 
-        GraphQLSchema graphQLSchema = generator.generateSchema(Lists.newArrayList(createDummySchema(), schema2));
+        GraphQLSchema graphQLSchema = generator.generateSchema(Lists.newArrayList(createDummySchema(), schema2), false);
         List<GraphQLFieldDefinition> fieldDefinitions = graphQLSchema.getQueryType().getFieldDefinitions();
         Assert.assertEquals(2, fieldDefinitions.size());
         testDummyRoot(fieldDefinitions.get(0));
@@ -220,7 +221,7 @@ public class TestGraphQLGeneratorImpl {
                 .addField(new ListSchema(RecordSchema.INT), LIST_NAME)
                 .build();
 
-        GraphQLSchema graphQLSchema = generator.generateSchema(Lists.newArrayList(createDummySchema(), schema2));
+        GraphQLSchema graphQLSchema = generator.generateSchema(Lists.newArrayList(createDummySchema(), schema2), false);
         List<GraphQLFieldDefinition> fieldDefinitions = graphQLSchema.getQueryType().getFieldDefinitions();
         Assert.assertEquals(2, fieldDefinitions.size());
         testDummyRoot(fieldDefinitions.get(0));
@@ -238,7 +239,7 @@ public class TestGraphQLGeneratorImpl {
     public void shouldFailOnEmptySchema() {
         RecordSchema dummy = RecordSchema.newBuilder("dummy").build();
         try {
-            generator.generateSchema(dummy);
+            generator.generateSchema(dummy, false);
         } catch (IllegalArgumentException e) {
             return;
         }
@@ -258,7 +259,7 @@ public class TestGraphQLGeneratorImpl {
                 .addField(subclass, "field3")
                 .build();
 
-        GraphQLSchema graphQLSchema = generator.generateSchema(build);
+        GraphQLSchema graphQLSchema = generator.generateSchema(build, false);
         Assert.assertNotNull(graphQLSchema);
     }
 
@@ -274,7 +275,7 @@ public class TestGraphQLGeneratorImpl {
                 .addField(subclass, FIELD2)
                 .build();
 
-        GraphQLSchema graphQLSchema = generator.generateSchema(build);
+        GraphQLSchema graphQLSchema = generator.generateSchema(build, false);
         Assert.assertNotNull(graphQLSchema);
     }
 
@@ -286,7 +287,7 @@ public class TestGraphQLGeneratorImpl {
                 .build();
         RecordSchema build = RecordSchemaBuilder.newBuilder(FIRST_CLASS).addField(subclass, FIELD).build();
 
-        GraphQLSchema graphQLSchema = generator.generateSchema(build);
+        GraphQLSchema graphQLSchema = generator.generateSchema(build, false);
         List<GraphQLFieldDefinition> fieldDefinitions = graphQLSchema.getQueryType().getFieldDefinitions();
         Assert.assertEquals(1, fieldDefinitions.size());
         GraphQLFieldDefinition subcl = fieldDefinitions.get(0);
@@ -314,7 +315,7 @@ public class TestGraphQLGeneratorImpl {
         parser.parse(resourceAsStream);
         Set<String> schemaNames = parser.getSchemaNames();
 
-        GraphQLSchema graphQLSchema = generator.generateSchema((RecordSchema) parser.getSchema("cz.atlascon.etic.Propertyvalue"));
+        GraphQLSchema graphQLSchema = generator.generateSchema((RecordSchema) parser.getSchema("cz.atlascon.etic.Propertyvalue"), false);
     }
 
     @Test
@@ -325,7 +326,7 @@ public class TestGraphQLGeneratorImpl {
         RecordSchema schema = RecordSchemaBuilder
                 .newBuilder("cz_atlascon_record").addField(Schema.STRING, name)
                 .setIdSchema(idSchema).build();
-        GraphQLSchema graphQLSchema = generator.generateSchema(schema);
+        GraphQLSchema graphQLSchema = generator.generateSchema(schema, false);
 
         GraphQLFieldDefinition record = graphQLSchema.getQueryType().getFieldDefinition("cz_atlascon_record");
         List<GraphQLArgument> arguments = record.getArguments();
@@ -348,7 +349,7 @@ public class TestGraphQLGeneratorImpl {
         RecordSchema schema = RecordSchemaBuilder
                 .newBuilder("cz.atlascon.record").addField(Schema.STRING, name)
                 .setIdSchema(idSchema).build();
-        GraphQLSchema graphQLSchema = generator.generateSchema(schema);
+        GraphQLSchema graphQLSchema = generator.generateSchema(schema, false);
         //TODO checks
     }
 
@@ -364,7 +365,7 @@ public class TestGraphQLGeneratorImpl {
         RecordSchema schema = RecordSchemaBuilder
                 .newBuilder("cz.atlascon.record").addField(Schema.STRING, name)
                 .setIdSchema(idSchema).build();
-        GraphQLSchema graphQLSchema = generator.generateSchema(schema);
+        GraphQLSchema graphQLSchema = generator.generateSchema(schema, false);
         // TODO checks
     }
 
@@ -388,7 +389,7 @@ public class TestGraphQLGeneratorImpl {
                 .addField(ListSchema.of(date), "list")
                 .build();
 
-        GraphQLSchema graphQLSchema = generator.generateSchema(build);
+        GraphQLSchema graphQLSchema = generator.generateSchema(build, false);
     }
 
     @Test
@@ -398,7 +399,7 @@ public class TestGraphQLGeneratorImpl {
                 .addField(
                         MapSchema.of(Schema.STRING,
                                 MapSchema.of(Schema.STRING, Schema.INT)), "fieldName").build();
-        GraphQLSchema graphQLSchema = generator.generateSchema(build);
+        GraphQLSchema graphQLSchema = generator.generateSchema(build, false);
 
         GraphQLObjectType queryType = graphQLSchema.getQueryType();
 

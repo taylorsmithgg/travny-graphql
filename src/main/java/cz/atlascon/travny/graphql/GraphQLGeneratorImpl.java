@@ -43,14 +43,15 @@ public class GraphQLGeneratorImpl implements GraphQLGenerator {
 
     @Override
     public GraphQLSchema generateSchema(List<SchemaAddinfo> addinfoList,
-                                        Function<String, RecordSchema> schemaSupplier) {
+                                        Function<String, RecordSchema> schemaSupplier,
+                                        boolean withRootFieldPredicate) {
         Preconditions.checkNotNull(addinfoList, "Not Valid use addinfoList cannot be null!");
         Preconditions.checkArgument(!addinfoList.isEmpty(), "Not valid Use, addinfoList cannot be empty!");
-        List<RecordSchema> schemas = addinfoList.stream().map(schemaAddinfo -> schemaAddinfo.getRecordSchema()).collect(Collectors.toList());
+        List<RecordSchema> schemas = addinfoList.stream().map(SchemaAddinfo::getRecordSchema).collect(Collectors.toList());
 
         outputGenerator.setSchemaSupplier(createSupplier(schemaSupplier, schemas));
         LOGGER.info("Creating types schemas");
-        List<GraphQLFieldDefinition> types = createRootFields(addinfoList, dataFetcher, dataFetchers);
+        List<GraphQLFieldDefinition> types = createRootFields(addinfoList, dataFetcher, dataFetchers, withRootFieldPredicate);
         LOGGER.info("Types schemas created");
         LOGGER.info("Creating root schema");
         GraphQLSchema root = GraphQLSchema.newSchema()
@@ -75,12 +76,12 @@ public class GraphQLGeneratorImpl implements GraphQLGenerator {
         };
     }
 
-    private List<GraphQLFieldDefinition> createRootFields(List<SchemaAddinfo> recordSchemas, DataFetcher dataFetcher, List<TravnyFetcher> dataFetchers) {
+    private List<GraphQLFieldDefinition> createRootFields(List<SchemaAddinfo> recordSchemas, DataFetcher dataFetcher, List<TravnyFetcher> dataFetchers, boolean withRootFieldPredicate) {
         List<GraphQLFieldDefinition> fieldDefinitions = Lists.newArrayList();
         for (SchemaAddinfo addinfo : recordSchemas) {
             // get name of class without packages
             RecordSchema recordSchema = addinfo.getRecordSchema();
-            fieldDefinitions.add(createRootField(addinfo, chooseFetcher(dataFetcher, dataFetchers, recordSchema)));
+            fieldDefinitions.add(createRootField(addinfo, chooseFetcher(dataFetcher, dataFetchers, recordSchema), withRootFieldPredicate));
         }
 
         return fieldDefinitions;
@@ -101,21 +102,17 @@ public class GraphQLGeneratorImpl implements GraphQLGenerator {
         return defaultFetcher;
     }
 
-    private GraphQLFieldDefinition createRootField(SchemaAddinfo addinfo, DataFetcher dataFetcher) {
+    private GraphQLFieldDefinition createRootField(SchemaAddinfo addinfo, DataFetcher dataFetcher, boolean withRootFieldPredicate) {
         Preconditions.checkNotNull(addinfo, "schema cannot be null!");
         GraphQLOutputType outputType = outputGenerator.createRootField(addinfo.getRecordSchema());
 
         return GraphQLFieldDefinition.newFieldDefinition()
                 .type(GraphQLList.list(outputType))
-                .argument(argumentsPerRootField(addinfo.getIdSchema()))
+                .argument(inputGenerator.createRootField(addinfo.getIdSchema(), withRootFieldPredicate))
                 .name(addinfo.getFieldName())
                 .dataFetcher(dataFetcher)
                 .description("Generated graphQL schema for class: " + addinfo.getRecordSchema().getName())
                 .build();
-    }
-
-    private List<GraphQLArgument> argumentsPerRootField(RecordSchema idSchema) {
-        return inputGenerator.createRootField(idSchema);
     }
 
     /**
