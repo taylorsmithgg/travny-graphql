@@ -83,8 +83,8 @@ public class OutputGenerator {
             GraphQLOutputType val = createType(mapSchema.getValueSchema());
             String entryName = "map_entry_" + getName(key) + "_" + getName(val);
             GraphQLOutputType entryType = typeMap.computeIfAbsent(entryName, n -> {
-                GraphQLFieldDefinition keyField = createField("key", key, null);
-                GraphQLFieldDefinition valField = createField("val", val, null);
+                GraphQLFieldDefinition keyField = createField("key", key, new FieldDataFetcher(null));
+                GraphQLFieldDefinition valField = createField("val", val, new FieldDataFetcher(null));
                 return GraphQLObjectType
                         .newObject()
                         .field(keyField)
